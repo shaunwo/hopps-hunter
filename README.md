@@ -29,7 +29,7 @@ At the outset, I will need at least the following DB tables in ProgreSQL for wha
 An interactive community for craft beer lovers where users can connect with one another, follow their favorite brews, and look for new ones.
 
 ### User Flow
-Users will create an account and log back into the system, and land on a page the display recent checkins from Untappd. A user will have the option to search by brewery, beer and/or style, and then check-in, rate, or add an item to his/her wishlist. The user will see some alerts when they first sign in if there are any items on their wishlist that are now available in their area. The user can look at connected/”friended” users accounts and leave comments and toasts as well.
+Users will create an account and log back into the system, and land on a page the display recent checkins from Untappd. A user will have the option to search by brewery, beer and/or style, and then check-in, rate, upload an image, or add an item to his/her wishlist. The user will see some alerts when they first sign in if there are any items on their wishlist that are now available in their area. The user can look at connected/”friended” users accounts and leave comments and toasts as well.
 
 ### Features
 * A beautiful, clean interface that some may like better than Untappd
