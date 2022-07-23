@@ -9,6 +9,7 @@ In my experience, craft beer aficionados are largely men, but not only. I think 
 
 ## Data Source
 API: [https://untappd.com/api/docs](https://untappd.com/api/docs)
+
 APP DB: PostgreSQL
 
 I will pull most of the beer and brewery info from the Untappd API, but the user accounts, check-ins, follows and other interactions will be stored in the PostgreSQL DB that I will build.
@@ -22,13 +23,15 @@ At the outset, I will need at least the following DB tables in ProgreSQL for wha
 ### Sensitive Information
 
 * Usernames and Passwords
-	* Passwords will be stored with Bcrypt
+	* Passwords will be stored with Flask Bcrypt
 * Check-ins, follows, and other features of a User’s profile if they choose to keep their account private
 
 ### Functionality
 An interactive community for craft beer lovers where users can connect with one another, follow their favorite brews, and look for new ones.
 
 ### User Flow
+![Hopps Hunter User Flow Diagram.png](https://github.com/shaunwo/hopps-hunter/blob/1fccde36b2fa77caf968fae868e72ec9ecaa11c6/Hopps%20Hunter%20User%20Flow%20Diagram.png)
+
 Users will create an account and log back into the system, and land on a page the display recent checkins from Untappd. A user will have the option to search by brewery, beer and/or style, and then check-in, rate, upload an image, or add an item to his/her wishlist. The user will see some alerts when they first sign in if there are any items on their wishlist that are now available in their area. The user can look at connected/”friended” users accounts and leave comments and toasts as well.
 
 ### Features
@@ -38,7 +41,9 @@ Users will create an account and log back into the system, and land on a page th
 * Alerts when a beer on a users wishlist becomes available at a local retailer
 
 #### Stretch Goals
-* Ability to upload an image with check-ins
+* Login with Facebook, Google, etc.
+* Set up “subscriptions” for a beer from multiple zip codes
+* Set up emails alerts where a user would received an e-mail when a beer is newly available in his/her area
 * Option to look for possible friends through a user’s social media sites and/or address book
 
 ### Possible Issues
