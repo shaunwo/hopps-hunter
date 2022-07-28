@@ -18,7 +18,7 @@ I will pull most of the beer and brewery info from the Untappd API, but the user
 ### Database Schema
 At the outset, I will need at least the following DB tables in ProgreSQL for what I will build:
 
-![Hopps Hunter DB Schema.png](https://github.com/shaunwo/hopps-hunter/blob/aa2d1564a1055ce0e0f05779f6a5a2413aeae478/Hopps%20Hunter%20DB%20Schema.png)
+![Hopps Hunter DB Schema.png](https://github.com/shaunwo/hopps-hunter/blob/207bd4ea02840511cf70f066ed12c94463ab30d4/Hopps%20Hunter%20DB%20Schema.png)
 
 ### Sensitive Information
 
