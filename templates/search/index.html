@@ -3,6 +3,47 @@
 
 <h1>Search for Beers</h1>
 
-<p>Coming soon...</p>
-
-{% endblock %}
+{% if beers|length == 0 %}
+<h2>Sorry, no beers found from that search.</h2>
+{% else %}
+<h2>Beers</h2>
+{% for beer in beers %}
+<div class="card">
+	<div class="card-body">
+		<h3 class="card-title">{{ beer.name }}</h3>
+		<h4 class="card-subtitle">{{ beer.brewery.name }}</h4>
+		<h5>{{ beer.style.style_name }}</h5>
+		{% if beer.descript|length %}
+		<p class="card-text">{{beer.descript}}</p>
+		{% endif %}
+		<a href="#" class="btn btn-success">Check In</a>
+		<a href="#" class="btn btn-primary">Add to Wishlist</a>
+	</div>
+</div>
+{% endfor %} {% endif %} {% if breweries|length == 0 %}
+<h2>Sorry, no breweries found from that search.</h2>
+{% else %}
+<h2>Breweries</h2>
+<div class="row justify-content-end">
+	<div class="col-sm-9">
+		<div class="row">
+			{% for brewery in breweries %}
+			<p class="card-bio">{{ brewery.name }}</p>
+			{% endfor %}
+		</div>
+	</div>
+</div>
+{% endif %} {% if styles|length == 0 %}
+<h2>Sorry, no styles found from that search.</h2>
+{% else %}
+<h2>Styles</h2>
+<div class="row justify-content-end">
+	<div class="col-sm-9">
+		<div class="row">
+			{% for style in styles %}
+			<p class="card-bio">{{ style.style_name }}</p>
+			{% endfor %}
+		</div>
+	</div>
+</div>
+{% endif %} {% endblock %}

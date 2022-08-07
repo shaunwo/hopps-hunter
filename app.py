@@ -38,7 +38,13 @@ def profile_page():
 # displaying the search
 @app.route('/search')
 def search_page():
-    return render_template('search/index.html')
+
+    # searching each possible source
+    beers = Beer.query.filter(Beer.name.ilike(f"%ipa%")).order_by(Beer.name.asc()).all()
+    breweries = Brewery.query.filter(Brewery.name.ilike(f"%founder%")).order_by(Brewery.name.asc()).all()
+    styles = Style.query.filter(Style.style_name.ilike(f"%barrel%")).order_by(Style.style_name.asc()).all()
+
+    return render_template('search/index.html', beers=beers, breweries=breweries, styles=styles)
 
 
 # BEGIN API ROUTES

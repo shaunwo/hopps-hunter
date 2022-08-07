@@ -14,10 +14,12 @@ class Beer(db.Model):
     id = db.Column(
         db.Integer,
         primary_key=True,
+        autoincrement=True,
     )
 
     brewery_id = db.Column(
         db.Integer,
+        db.ForeignKey('api_breweries.id'),
         nullable=False,
     )
 
@@ -28,6 +30,7 @@ class Beer(db.Model):
 
     style_id = db.Column(
         db.Integer,
+        db.ForeignKey('api_styles.id'),
         nullable=False,
     )
 
@@ -46,6 +49,9 @@ class Beer(db.Model):
         nullable=True,
     )
 
+    brewery = db.relationship("Brewery", primaryjoin="Beer.brewery_id == Brewery.id")
+    style = db.relationship("Style", primaryjoin="Beer.style_id == Style.id")
+
 class Brewery(db.Model):
     
     __tablename__ = 'api_breweries'
@@ -53,6 +59,7 @@ class Brewery(db.Model):
     id = db.Column(
         db.Integer,
         primary_key=True,
+        autoincrement=True,
     )
 
     name = db.Column(
@@ -97,6 +104,7 @@ class Style(db.Model):
     id = db.Column(
         db.Integer,
         primary_key=True,
+        autoincrement=True,
     )
 
     style_name = db.Column(
