@@ -1,0 +1,14 @@
+{% extends 'base.html' %} {% block title %}Hopps Hunter | Breweries{% endblock
+%} {% block content %} {% if breweries|length == 0 %}
+<h3>Sorry, no breweries found.</h3>
+{% else %}
+<div class="row justify-content-end">
+	<div class="col-sm-9">
+		<div class="row">
+			{% for brewery in breweries %}
+			<p class="card-bio">{{ brewery.name }}</p>
+			{% endfor %}
+		</div>
+	</div>
+</div>
+{% endif %} {% endblock %}
