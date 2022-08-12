@@ -1,6 +1,4 @@
-"""SQLAlchemy models for Hopps Hunter"""
-from datetime import datetime
-
+"""SQLAlchemy models for Hopps Hunter API"""
 from flask_bcrypt import Bcrypt
 from flask_sqlalchemy import SQLAlchemy
 
