@@ -24,26 +24,28 @@
 <h2>Sorry, no breweries found from that search.</h2>
 {% else %}
 <h2>Breweries</h2>
-<div class="row justify-content-end">
-	<div class="col-sm-9">
-		<div class="row">
-			{% for brewery in breweries %}
-			<p class="card-bio">{{ brewery.name }}</p>
-			{% endfor %}
-		</div>
+{% for brewery in breweries %}
+<div class="card">
+	<div class="card-body">
+		<h3 class="card-title">{{ brewery.name }}</h3>
+		<h4 class="card-subtitle">{{ brewery.city }}, {{ brewery.state }}</h4>
+		{% if brewery.descript|length %}
+		<p class="card-text">{{brewery.descript}}</p>
+		{% endif %}
+		<a href="#" class="btn btn-success">Show Beers</a>
+		<a href="#" class="btn btn-primary">Add to Wishlist</a>
 	</div>
 </div>
-{% endif %} {% if styles|length == 0 %}
+{% endfor %} {% endif %} {% if styles|length == 0 %}
 <h2>Sorry, no styles found from that search.</h2>
 {% else %}
 <h2>Styles</h2>
-<div class="row justify-content-end">
-	<div class="col-sm-9">
-		<div class="row">
-			{% for style in styles %}
-			<p class="card-bio">{{ style.style_name }}</p>
-			{% endfor %}
-		</div>
+{% for style in styles %}
+<div class="card">
+	<div class="card-body">
+		<h3 class="card-title">{{ style.style_name }}</h3>
+		<a href="#" class="btn btn-success">Show Beers</a>
+		<a href="#" class="btn btn-primary">Add to Wishlist</a>
 	</div>
 </div>
-{% endif %} {% endblock %}
+{% endfor %} {% endif %} {% endblock %}
