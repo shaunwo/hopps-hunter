@@ -1,6 +1,9 @@
 nav {
 	background-color: black;
 }
+h2 {
+	margin-top: 15px;
+}
 .card {
 	margin-bottom: 12px;
 }
