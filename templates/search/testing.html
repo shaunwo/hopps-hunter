@@ -3,17 +3,7 @@
 
 <h1>Search for Beers</h1>
 
-<form method="POST">
-	{{ form.hidden_tag() }} {% for field in form if field.widget.input_type !=
-	'hidden' %} {% for error in field.errors %}
-	<span class="text-danger">{{ error }}</span>
-	{% endfor %} {{ field(placeholder=field.label.text, class="form-control")
-	}} {% endfor %}
-
-	<button class="btn btn-primary btn-lg btn-block">Search!</button>
-</form>
-
-{% if beers %} {% if beers|length == 0 %}
+{% if beers|length == 0 %}
 <h2>Sorry, no beers found from that search.</h2>
 {% else %}
 <h2>Beers</h2>
@@ -30,8 +20,7 @@
 		<a href="#" class="btn btn-primary">Add to Wishlist</a>
 	</div>
 </div>
-{% endfor %} {% endif %} {% endif %} {% if breweries %} {% if breweries|length
-== 0 %}
+{% endfor %} {% endif %} {% if breweries|length == 0 %}
 <h2>Sorry, no breweries found from that search.</h2>
 {% else %}
 <h2>Breweries</h2>
@@ -47,7 +36,7 @@
 		<a href="#" class="btn btn-primary">Add to Wishlist</a>
 	</div>
 </div>
-{% endfor %} {% endif %} {% endif %} {% if styles %} {% if styles|length == 0 %}
+{% endfor %} {% endif %} {% if styles|length == 0 %}
 <h2>Sorry, no styles found from that search.</h2>
 {% else %}
 <h2>Styles</h2>
@@ -59,4 +48,4 @@
 		<a href="#" class="btn btn-primary">Add to Wishlist</a>
 	</div>
 </div>
-{% endfor %} {% endif %} {% endif %} {% endblock %}
+{% endfor %} {% endif %} {% endblock %}

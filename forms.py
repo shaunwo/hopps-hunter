@@ -9,7 +9,12 @@ class SignupForm(FlaskForm):
     password = PasswordField('Password', validators=[Length(min=6)])
 
 class LoginForm(FlaskForm):
-    """Login form."""
+    """Login form"""
 
     username = StringField('Username', validators=[DataRequired()])
     password = PasswordField('Password', validators=[Length(min=6)])
+
+class SearchForm(FlaskForm):
+    """Search form"""
+
+    search = StringField('search', validators=[DataRequired()])

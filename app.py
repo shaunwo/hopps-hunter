@@ -1,10 +1,11 @@
 from flask import Flask, render_template, redirect, request, session, flash, g
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
+from werkzeug.exceptions import Unauthorized
 
 from models import db, connect_db, User, UserConnection, UserNotification, Follow, Checkin, Toast, ToastComment, Wishlist
 from api_models import Beer, Brewery, Style
-from forms import SignupForm, LoginForm
+from forms import SignupForm, LoginForm, SearchForm
 
 CURR_USER_KEY = "curr_user"
 app = Flask(__name__)
@@ -120,28 +121,60 @@ def logout():
 # displaying the recent activity
 @app.route('/activity')
 def activity_page():
+    
+    # checking to see if the user has signed in
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/user/login")
+    
     return render_template('activity/index.html')
 
 # displaying the followers
 @app.route('/followers')
 def followers_page():
+
+    # checking to see if the user has signed in
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/user/login")
+    
     return render_template('followers/index.html')
 
 # displaying the profile
 @app.route('/profile')
 def profile_page():
+
+    # checking to see if the user has signed in
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/user/login")
+    
     return render_template('profile/index.html')
 
 # displaying the search
-@app.route('/search')
+@app.route('/search', methods=["GET", "POST"])
 def search_page():
 
-    # searching each possible source
-    beers = Beer.query.filter(Beer.name.ilike(f"%ipa%")).order_by(Beer.name.asc()).all()
-    breweries = Brewery.query.filter(Brewery.name.ilike(f"%founder%")).order_by(Brewery.name.asc()).all()
-    styles = Style.query.filter(Style.style_name.ilike(f"%barrel%")).order_by(Style.style_name.asc()).all()
+    # checking to see if the user has signed in
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/user/login")
+    
+    form = SearchForm()
+    
+    if form.validate_on_submit():
+        # searching each possible source
+        beers = Beer.query.filter(Beer.name.ilike(f"%{form.search.data}%")).order_by(Beer.name.asc()).all()
+        breweries = Brewery.query.filter(Brewery.name.ilike(f"%{form.search.data}%")).order_by(Brewery.name.asc()).all()
+        styles = Style.query.filter(Style.style_name.ilike(f"%{form.search.data}%")).order_by(Style.style_name.asc()).all()
 
-    return render_template('search/index.html', beers=beers, breweries=breweries, styles=styles)
+        if len(beers) == 0 and len(breweries) == 0 and len(styles) == 0:
+            flash("Sorry... no matches to that search. Please try another search.", 'danger')
+
+        return render_template('search/index.html', form=form, beers=beers, breweries=breweries, styles=styles)
+
+    else:
+        return render_template('search/index.html', form=form)
 
 
 # BEGIN API ROUTES
@@ -159,6 +192,4 @@ def api_search_brewery():
 def api_search_style():
     styles = Style.query.order_by(Style.style_name.asc()).all()
     return render_template('api/styles/index.html', styles=styles)
-
-
 # END API ROUTES

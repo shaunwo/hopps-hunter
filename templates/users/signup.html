@@ -9,8 +9,11 @@
 	<span class="text-danger">{{ error }}</span>
 	{% endfor %} {{ field(placeholder=field.label.text, class="form-control")
 	}} {% endfor %}
-
+	<br />
 	<button class="btn btn-primary btn-lg btn-block">Sign me up!</button>
 </form>
-
+<p class="account-option">
+	Already have an account?
+	<a href="/user/login" alt="Login to Hopps Hunter">Login NOW!</a>
+</p>
 {% endblock %}

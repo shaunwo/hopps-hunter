@@ -8,7 +8,13 @@ block content %}
 	<span class="text-danger">{{ error }}</span>
 	{% endfor %} {{ field(placeholder=field.label.text, class="form-control")
 	}} {% endfor %}
-
+	<br />
 	<button class="btn btn-primary btn-block btn-lg">Log in</button>
 </form>
+<p class="account-option">
+	Don't have an account, yet?
+	<a href="/user/signup" alt="Signup for Hopps Hunter, today!"
+		>Signup NOW!</a
+	>
+</p>
 {% endblock %}

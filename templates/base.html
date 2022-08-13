@@ -27,6 +27,20 @@
 						alt="Hopps Hunter"
 				/></a>
 				<ul class="nav navbar-nav flex-row float-right">
+					{% if not g.user %}
+					<li class="nav-item">
+						<a
+							class="nav-link pr-3 text-light"
+							href="/user/login"
+							>Login</a
+						>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link text-light" href="/user/signup"
+							>Sign Up</a
+						>
+					</li>
+					{% else %}
 					<li class="nav-item">
 						<a class="nav-link pr-3 text-light" href="/search"
 							>Search</a
@@ -53,20 +67,6 @@
 							>Profile</a
 						>
 					</li>
-					{% if not g.user %}
-					<li class="nav-item">
-						<a
-							class="nav-link pr-3 text-light"
-							href="/user/login"
-							>Login</a
-						>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link text-light" href="/user/signup"
-							>Sign Up</a
-						>
-					</li>
-					{% else %}
 					<li class="nav-item">
 						<a
 							class="nav-link pr-3 text-light"
