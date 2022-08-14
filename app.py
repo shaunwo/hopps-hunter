@@ -211,12 +211,12 @@ def wishlist_beer(beer_id):
         # flash(f"{error}", 'danger')
         message = Markup("Error capturing the wishlist addition. Is it already on your <a href=\"/user/wishlist\">wishlist</a>?")
         flash(message, 'danger')
-        return render_template('/profile/wishlist.html', form=form)
+        return render_template('/profile/wishlist.html')
     
     if wishlist:
         flash(f"{beer.name} added to your wishlist", "success")
     
-    return render_template('/profile/wishlist.html', form=form)
+    return render_template('/profile/wishlist.html')
 
 
 ##############################################################################
