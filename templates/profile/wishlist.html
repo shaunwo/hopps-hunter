@@ -1,0 +1,12 @@
+{% extends 'base.html' %} {% block title %}Hopps Hunter | Profile | Wishlist{%
+endblock %} {% block content %}
+
+<h1>My Wishlist</h1>
+
+{% for beer in wishlist %}
+<div class="card">
+	<div class="card-body">
+		<h3 class="card-title">{{ beer.beer_id }}</h3>
+	</div>
+</div>
+{% endfor %} {% endblock %}

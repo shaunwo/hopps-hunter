@@ -211,16 +211,37 @@ def wishlist_beer(beer_id):
         # flash(f"{error}", 'danger')
         message = Markup("Error capturing the wishlist addition. Is it already on your <a href=\"/user/wishlist\">wishlist</a>?")
         flash(message, 'danger')
-        return render_template('/search/index.html', form=form)
+        return render_template('/profile/wishlist.html', form=form)
     
     if wishlist:
         flash(f"{beer.name} added to your wishlist", "success")
     
-    return render_template('/search/index.html', form=form)
+    return render_template('/profile/wishlist.html', form=form)
 
 
 ##############################################################################
 # END BEER/BREWERY/STYLE CHECKIN AND WISHLIST ROUTES 
+##############################################################################
+
+
+##############################################################################
+# BEGIN PROFILE ROUTES 
+##############################################################################
+@app.route('/profile/wishlist', methods=['GET', 'POST'])
+def user_wishlist():
+    
+    # checking to see if the user has signed in
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/user/login")
+        
+    wishlist = Wishlist.query.filter(Wishlist.user_id == session[CURR_USER_KEY]).order_by(Wishlist.created_dt.desc()).all()
+
+    return render_template('/profile/wishlist.html', wishlist=wishlist)
+
+
+##############################################################################
+# END PROFILE ROUTES 
 ##############################################################################
 
 # BEGIN API ROUTES

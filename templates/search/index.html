@@ -32,6 +32,14 @@
 		<a href="/beer/wishlist/{{beer.id}}" class="btn btn-primary"
 			>Add to Wishlist</a
 		>
+		<!-- <form method="POST" action="/beer/wishlist/{{beer.id}}">
+			<input
+				type="hidden"
+				name="search"
+				value="{{form.search.data}}"
+			/>
+			<button class="btn btn-primary">Add to Wishlist</button>
+		</form> -->
 	</div>
 </div>
 {% endfor %} {% endif %} {% endif %} {% if breweries %} {% if breweries|length
