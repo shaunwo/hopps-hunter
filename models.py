@@ -133,6 +133,16 @@ class Wishlist(db.Model):
     created_dt = db.Column(db.DateTime,nullable=False,default=datetime.utcnow())
     last_updated_dt = db.Column(db.DateTime,nullable=False,default=datetime.utcnow())
     deleted_dt = db.Column(db.DateTime,nullable=True)
+    __table_args__ = (
+        db.UniqueConstraint('beer_id', 'user_id', name='uix_1'),
+    )
+
+    @classmethod
+    def add(cls, user_id, beer_id):
+        wishlist = Wishlist(user_id=user_id, beer_id=beer_id,)
+        
+        db.session.add(wishlist)
+        return wishlist
 
 def connect_db(app):
     """Connect this database to provided Flask app.

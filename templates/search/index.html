@@ -26,8 +26,12 @@
 		{% if beer.descript|length %}
 		<p class="card-text">{{beer.descript}}</p>
 		{% endif %}
-		<a href="#" class="btn btn-success">Check In</a>
-		<a href="#" class="btn btn-primary">Add to Wishlist</a>
+		<a href="/beer/checkin/{{beer.id}}" class="btn btn-success"
+			>Check In</a
+		>
+		<a href="/beer/wishlist/{{beer.id}}" class="btn btn-primary"
+			>Add to Wishlist</a
+		>
 	</div>
 </div>
 {% endfor %} {% endif %} {% endif %} {% if breweries %} {% if breweries|length

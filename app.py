@@ -1,11 +1,12 @@
-from flask import Flask, render_template, redirect, request, session, flash, g
+from importlib.resources import as_file
+from flask import Flask, render_template, redirect, request, session, flash, g, Markup
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 from werkzeug.exceptions import Unauthorized
 
 from models import db, connect_db, User, UserConnection, UserNotification, Follow, Checkin, Toast, ToastComment, Wishlist
 from api_models import Beer, Brewery, Style
-from forms import SignupForm, LoginForm, SearchForm
+from forms import SignupForm, LoginForm, SearchForm, BeerCheckinForm
 
 CURR_USER_KEY = "curr_user"
 app = Flask(__name__)
@@ -50,7 +51,7 @@ def do_logout():
     if CURR_USER_KEY in session:
         del session[CURR_USER_KEY]
 
-@app.route('/user/signup', methods=["GET", "POST"])
+@app.route('/user/signup', methods=['GET', 'POST'])
 def signup():
     """Handle user signup.
 
@@ -85,7 +86,7 @@ def signup():
         return render_template('users/signup.html', form=form)
 
 
-@app.route('/user/login', methods=["GET", "POST"])
+@app.route('/user/login', methods=['GET', 'POST'])
 def login():
     """Handle user login."""
 
@@ -152,7 +153,7 @@ def profile_page():
     return render_template('profile/index.html')
 
 # displaying the search
-@app.route('/search', methods=["GET", "POST"])
+@app.route('/search', methods=['GET', 'POST'])
 def search_page():
 
     # checking to see if the user has signed in
@@ -176,6 +177,51 @@ def search_page():
     else:
         return render_template('search/index.html', form=form)
 
+
+##############################################################################
+# BEGIN BEER/BREWERY/STYLE CHECKIN AND WISHLIST ROUTES 
+##############################################################################
+@app.route('/beer/checkin/<int:beer_id>', methods=['GET', 'POST'])
+def checkin_beer(beer_id):
+    beer = Beer.query.get_or_404(beer_id)
+    
+    form = BeerCheckinForm()
+
+    """ if form.validate_on_submit():
+        as_file
+        """ 
+    
+    return render_template('beer/checkin.html', beer=beer, form=form)
+
+@app.route('/beer/wishlist/<int:beer_id>', methods=['GET', 'POST'])
+def wishlist_beer(beer_id):
+    
+    form = SearchForm()
+
+    beer = Beer.query.get_or_404(beer_id)
+
+    try:
+        wishlist = Wishlist.add(
+            user_id=session[CURR_USER_KEY],
+            beer_id=beer_id,
+        )
+        db.session.commit()
+
+    except IntegrityError as error:
+        # flash(f"{error}", 'danger')
+        message = Markup("Error capturing the wishlist addition. Is it already on your <a href=\"/user/wishlist\">wishlist</a>?")
+        flash(message, 'danger')
+        return render_template('/search/index.html', form=form)
+    
+    if wishlist:
+        flash(f"{beer.name} added to your wishlist", "success")
+    
+    return render_template('/search/index.html', form=form)
+
+
+##############################################################################
+# END BEER/BREWERY/STYLE CHECKIN AND WISHLIST ROUTES 
+##############################################################################
 
 # BEGIN API ROUTES
 @app.route('/api/search/beer')
