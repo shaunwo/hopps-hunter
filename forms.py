@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, TextAreaField
+from wtforms import StringField, PasswordField, TextAreaField, SelectField
 from wtforms.validators import DataRequired, Email, Length
 
 # user / account routes
@@ -18,8 +18,10 @@ class LoginForm(FlaskForm):
 # search / checkin ; wishlist forms
 class SearchForm(FlaskForm):
     """Search form"""
+    SEARCH_FOR_CHOICES = [('Beer', 'Beer'), ('Brewery', 'Brewery'), ('Style', 'Style'), ('ALL', 'ALL')]
 
     search = StringField('search', validators=[DataRequired()])
+    searchfor = SelectField(u'', choices=SEARCH_FOR_CHOICES )
 
 class BeerCheckinForm(FlaskForm):
     """Beer checkin form"""

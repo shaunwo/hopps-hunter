@@ -164,12 +164,21 @@ def search_page():
     form = SearchForm()
     
     if form.validate_on_submit():
+        
+        # defining empty variables
+        beers = None
+        breweries = None
+        styles = None
+        
         # searching each possible source
-        beers = Beer.query.filter(Beer.name.ilike(f"%{form.search.data}%")).order_by(Beer.name.asc()).all()
-        breweries = Brewery.query.filter(Brewery.name.ilike(f"%{form.search.data}%")).order_by(Brewery.name.asc()).all()
-        styles = Style.query.filter(Style.style_name.ilike(f"%{form.search.data}%")).order_by(Style.style_name.asc()).all()
+        if (form.searchfor.data == 'Beer' or form.searchfor.data == 'ALL'):
+            beers = Beer.query.filter(Beer.name.ilike(f"%{form.search.data}%")).order_by(Beer.name.asc()).all()
+        if (form.searchfor.data == 'Brewery' or form.searchfor.data == 'ALL'):
+            breweries = Brewery.query.filter(Brewery.name.ilike(f"%{form.search.data}%")).order_by(Brewery.name.asc()).all()
+        if (form.searchfor.data == 'Style' or form.searchfor.data == 'ALL'):
+            styles = Style.query.filter(Style.style_name.ilike(f"%{form.search.data}%")).order_by(Style.style_name.asc()).all()
 
-        if len(beers) == 0 and len(breweries) == 0 and len(styles) == 0:
+        if beers == None and breweries == None and styles == None:
             flash("Sorry... no matches to that search. Please try another search.", 'danger')
 
         return render_template('search/index.html', form=form, beers=beers, breweries=breweries, styles=styles)

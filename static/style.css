@@ -14,3 +14,15 @@ h2 {
 	font-weight: 500;
 	display: block;
 }
+#search-form {
+	display: flex;
+}
+#search-form select,
+#search-form input[type='text'] {
+	margin-right: 20px;
+}
+
+#search-results {
+	font-size: 140%;
+	margin: 15px 0;
+}

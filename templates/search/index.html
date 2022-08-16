@@ -3,20 +3,32 @@
 
 <h1>Search for Beers</h1>
 
-<form method="POST">
+<form method="POST" action="/search" id="search-form">
 	{{ form.hidden_tag() }} {% for field in form if field.widget.input_type !=
 	'hidden' %} {% for error in field.errors %}
 	<span class="text-danger">{{ error }}</span>
 	{% endfor %} {{ field(placeholder=field.label.text, class="form-control")
 	}} {% endfor %}
 	<br />
-	<button class="btn btn-primary btn-lg btn-block">Search!</button>
+	<button class="btn btn-primary btn-lg btn-block">Search</button>
 </form>
+{% if beers or breweries or styles %}
+<p id="search-results">
+	<strong>Search Results:</strong>
 
-{% if beers %} {% if beers|length == 0 %}
+	{% if beers %}<a href="#beers">Beers ({{beers|length}})</a>{% endif %} {%
+	if beers and breweries %} | {% endif %} {% if breweries %}<a
+		href="#breweries"
+		>Breweries ({{breweries|length}})</a
+	>{% endif %} {% if breweries and styles %} | {% endif %} {% if styles %}<a
+		href="#styles"
+		>Styles ({{styles|length}})</a
+	>{% endif %}
+</p>
+{% endif %} {% if beers %} {% if beers|length == 0 %}
 <h2>Sorry, no beers found from that search.</h2>
 {% else %}
-<h2>Beers</h2>
+<h2 id="beers">Beers</h2>
 {% for beer in beers %}
 <div class="card">
 	<div class="card-body">
@@ -46,7 +58,7 @@
 == 0 %}
 <h2>Sorry, no breweries found from that search.</h2>
 {% else %}
-<h2>Breweries</h2>
+<h2 id="breweries">Breweries</h2>
 {% for brewery in breweries %}
 <div class="card">
 	<div class="card-body">
@@ -62,7 +74,7 @@
 {% endfor %} {% endif %} {% endif %} {% if styles %} {% if styles|length == 0 %}
 <h2>Sorry, no styles found from that search.</h2>
 {% else %}
-<h2>Styles</h2>
+<h2 id="styles">Styles</h2>
 {% for style in styles %}
 <div class="card">
 	<div class="card-body">
