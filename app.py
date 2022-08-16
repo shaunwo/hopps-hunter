@@ -70,6 +70,7 @@ def signup():
             user = User.signup(
                 username=form.username.data,
                 password=form.password.data,
+                email=form.email.data,
             )
             db.session.commit()
 
@@ -79,7 +80,7 @@ def signup():
             return render_template('users/signup.html', form=form)
 
         do_login(user)
-
+        flash(f"Welcome to Hopps Hunter, {user.username}!", "success")
         return redirect("/")
 
     else:
@@ -98,7 +99,7 @@ def login():
 
         if user:
             do_login(user)
-            flash(f"Hello, {user.username}!", "success")
+            flash(f"Welcome back, {user.username}!", "success")
             return redirect("/")
 
         flash("Invalid credentials.", 'danger')
