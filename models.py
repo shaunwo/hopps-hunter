@@ -63,6 +63,34 @@ class User(db.Model):
         
         db.session.add(user)
         return user
+    
+    @classmethod
+    def changepw(cls, user_id, password):
+        """Sign up user.
+        Hashes password and adds user to system.
+        """
+        hashed_pwd = bcrypt.generate_password_hash(password).decode('UTF-8')
+        user = cls.query.filter_by(user_id=user_id).first()
+        user.password=hashed_pwd
+        db.session.commit()
+        return user
+
+    @classmethod
+    def edit(cls, user_id, username, email, first_name, last_name, zip_code, bio, private, image_url):
+        """Update user profile info.
+        Hashes password and updates user in system.
+        """
+        user = cls.query.filter_by(user_id=user_id).first()
+        user.username=username
+        user.email=email
+        user.first_name=first_name
+        user.last_name=last_name
+        user.zip_code=zip_code
+        user.bio=bio
+        user.private=private
+        user.image_url=image_url
+        db.session.commit()
+        return user
 
     @classmethod
     def authenticate(cls, username, password):

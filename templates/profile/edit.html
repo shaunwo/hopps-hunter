@@ -1,0 +1,23 @@
+{% extends 'base.html' %} {% block title %}Hopps Hunter | Signup{% endblock %}
+{% block content %}
+
+<h1>Profile</h1>
+
+<form method="POST">
+	{{ form.hidden_tag() }} {% for field in form if (field.widget.input_type !=
+	'hidden') and (field.widget.input_type != 'checkbox') %} {{
+	field(placeholder=field.label.text, class="form-control") }} {% for error
+	in field.errors %}
+	<span class="text-danger">{{ error }}</span>
+	{% endfor %} {% endfor %} {% for field in form if (field.widget.input_type
+	!= 'hidden') and (field.widget.input_type == 'checkbox') %}
+	<div class="form-group">
+		{{field(class_="form-control-input")}} {{field.label}} {% for err in
+		field.errors %}
+		<small class="form-text text-danger"> {{err}} </small>{% endfor %}
+	</div>
+	{% endfor %}
+	<br />
+	<button class="btn btn-primary btn-lg btn-block">Edit</button>
+</form>
+{% endblock %}
