@@ -30,7 +30,7 @@ At the outset, I will need at least the following DB tables in ProgreSQL for wha
 An interactive community for craft beer lovers where users can connect with one another, follow their favorite brews, and look for new ones.
 
 ### User Flow
-![Hopps Hunter User Flow Diagram.png](https://github.com/shaunwo/hopps-hunter/blob/8c115fd95353101983f539e0c6bd8660e6c2f9f8/Hopps%20Hunter%20User%20Flow%20Diagram.png)
+![Hopps Hunter User Flow Diagram.png](https://github.com/shaunwo/hopps-hunter/blob/712476fd9a9b7aa1bb304a3ccebc208af6579488/Hopps%20Hunter%20User%20Flow%20Diagram.png)
 
 Users will create an account and log back into the system, and land on a page the display recent checkins from Untappd. A user will have the option to search by brewery, beer and/or style, and then check-in, rate, upload an image, or add an item to his/her wishlist. The user will see some alerts when they first sign in if there are any items on their wishlist that are now available in their area. The user can look at connected/”friended” users accounts and leave comments and toasts as well.
 
@@ -45,6 +45,7 @@ Users will create an account and log back into the system, and land on a page th
 * Set up “subscriptions” for a beer from multiple zip codes
 * Set up emails alerts where a user would received an e-mail when a beer is newly available in his/her area
 * Option to look for possible friends through a user’s social media sites and/or address book
+* Add infinite scrolling to search results
 
 ### Possible Issues
 * At the moment, I am making a couple assumptions about what specific pieces of data are/are not available through the API. If some of those items are not available 
