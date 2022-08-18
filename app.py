@@ -204,6 +204,29 @@ def checkin_beer(beer_id):
     """ if form.validate_on_submit():
         as_file
         """ 
+    if form.validate_on_submit():
+        try:
+            checkin = Checkin.add(
+                user_id=session[CURR_USER_KEY],
+                beer_id=beer.id,
+                brewery_id = beer.brewery_id,
+                style_id = beer.style_id,
+                comments = form.comments.data,
+                serving_size = form.serving_size.data,
+                purchase_location = form.purchase_location.data,
+                rating = form.rating.data,
+                image_url = form.image_url.data,
+            )
+            db.session.commit()
+
+        except IntegrityError as error:
+            # flash(f"{error}", 'danger')
+            message = Markup("Error capturing the checkin addition. Please try again.")
+            flash(message, 'danger')
+            return render_template('/beer/checkin/<int:beer_id>', beer=beer, form=form)
+        
+        if checkin:
+            flash(f"Your checkin for {beer.name} was added!", "success")
     
     return render_template('beer/checkin.html', beer=beer, form=form)
 
