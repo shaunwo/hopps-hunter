@@ -29,33 +29,8 @@
 <h2>Sorry, no beers found from that search.</h2>
 {% else %}
 <h2 id="beers">Beers</h2>
-{% for beer in beers %}
-<div class="card">
-	<div class="card-body">
-		<h3 class="card-title">{{ beer.name }}</h3>
-		<h4 class="card-subtitle">{{ beer.brewery.name }}</h4>
-		<h5>{{ beer.style.style_name }}</h5>
-		{% if beer.descript|length %}
-		<p class="card-text">{{beer.descript}}</p>
-		{% endif %}
-		<a href="/beer/checkin/{{beer.id}}" class="btn btn-success"
-			>Check In</a
-		>
-		<a href="/beer/wishlist/{{beer.id}}" class="btn btn-primary"
-			>Add to Wishlist</a
-		>
-		<!-- <form method="POST" action="/beer/wishlist/{{beer.id}}">
-			<input
-				type="hidden"
-				name="search"
-				value="{{form.search.data}}"
-			/>
-			<button class="btn btn-primary">Add to Wishlist</button>
-		</form> -->
-	</div>
-</div>
-{% endfor %} {% endif %} {% endif %} {% if breweries %} {% if breweries|length
-== 0 %}
+{% for beer in beers %} {% include 'search/beer_card.html' %} {% endfor %} {%
+endif %} {% endif %} {% if breweries %} {% if breweries|length == 0 %}
 <h2>Sorry, no breweries found from that search.</h2>
 {% else %}
 <h2 id="breweries">Breweries</h2>
@@ -67,7 +42,9 @@
 		{% if brewery.descript|length %}
 		<p class="card-text">{{brewery.descript}}</p>
 		{% endif %}
-		<a href="#" class="btn btn-success">Show Beers</a>
+		<a href="/search/brewery/{{brewery.id}}" class="btn btn-success"
+			>Show Beers</a
+		>
 		<a href="#" class="btn btn-primary">Add to Wishlist</a>
 	</div>
 </div>
@@ -79,7 +56,9 @@
 <div class="card">
 	<div class="card-body">
 		<h3 class="card-title">{{ style.style_name }}</h3>
-		<a href="#" class="btn btn-success">Show Beers</a>
+		<a href="/search/style/{{style.id}}" class="btn btn-success"
+			>Show Beers</a
+		>
 		<a href="#" class="btn btn-primary">Add to Wishlist</a>
 	</div>
 </div>

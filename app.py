@@ -146,16 +146,10 @@ def followers_page():
     
     return render_template('followers/index.html')
 
-# displaying the profile
-@app.route('/profile')
-def profile_page():
 
-    # checking to see if the user has signed in
-    if not g.user:
-        flash("Access unauthorized.", "danger")
-        return redirect("/user/login")
-    
-    return render_template('profile/index.html')
+##############################################################################
+# BEGIN SEARCH ROUTES 
+##############################################################################
 
 # displaying the search
 @app.route('/search', methods=['GET', 'POST'])
@@ -190,6 +184,28 @@ def search_page():
 
     else:
         return render_template('search/index.html', form=form)
+
+# show beers from a particular brewery
+@app.route('/search/brewery/<int:brewery_id>', methods=['GET'])
+def brewery_beers(brewery_id):
+    
+    brewery = Brewery.query.get_or_404(brewery_id)
+    beers = Beer.query.filter(Beer.brewery_id == brewery_id).order_by(Beer.name.asc()).all()
+
+    return render_template('search/brewery.html', beers=beers, brewery=brewery)
+
+# show beers from a particular style
+@app.route('/search/style/<int:style_id>', methods=['GET'])
+def style_beers(style_id):
+    
+    style = Style.query.get_or_404(style_id)
+    beers = Beer.query.filter(Beer.style_id == style_id).order_by(Beer.name.asc()).all()
+
+    return render_template('search/style.html', beers=beers, style=style)
+
+##############################################################################
+# END SEARCH ROUTES 
+##############################################################################
 
 
 ##############################################################################
@@ -255,7 +271,6 @@ def wishlist_beer(beer_id):
     
     return render_template('/profile/wishlist.html')
 
-
 ##############################################################################
 # END BEER/BREWERY/STYLE CHECKIN AND WISHLIST ROUTES 
 ##############################################################################
@@ -264,6 +279,19 @@ def wishlist_beer(beer_id):
 ##############################################################################
 # BEGIN PROFILE ROUTES 
 ##############################################################################
+
+# displaying the profile
+@app.route('/profile')
+def profile_page():
+
+    # checking to see if the user has signed in
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/user/login")
+    
+    return render_template('profile/index.html')
+
+# displaying the profile wishlist
 @app.route('/profile/wishlist', methods=['GET', 'POST'])
 def profile_wishlist():
     
@@ -276,6 +304,7 @@ def profile_wishlist():
 
     return render_template('/profile/wishlist.html', wishlist=wishlist)
 
+# displaying the change password screens / functionality
 @app.route('/profile/changepw', methods=['GET', 'POST'])
 def change_pw():
     
@@ -311,6 +340,7 @@ def change_pw():
     else:
         return render_template('/profile/changepw.html', form=form)
 
+# edit profile screens / functionality
 @app.route('/profile/edit', methods=['GET', 'POST'])
 def profile_edit():
     """Handle user signup.

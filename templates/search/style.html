@@ -1,0 +1,17 @@
+{% extends 'base.html' %} {% block title %}Hopps Hunter | {{ style.style_name }}
+Beers{% endblock %} {% block content %}
+
+<h1>{{ style.style_name }} Beers</h1>
+
+{% if beers %}
+<p id="search-results">
+	<strong>Search Results:</strong>
+	Beers ({{beers|length}})
+</p>
+{% endif %}
+
+<h2 id="beers">Beers</h2>
+{% if beers|length == 0 %}
+<h3>Sorry, no {{ style.style_name }} beers in the database at this time.</h3>
+{% else %} {% for beer in beers %} {% include 'search/beer_card.html' %} {%
+endfor %} {% endif %} {% endblock %}
