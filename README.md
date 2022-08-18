@@ -8,7 +8,7 @@ A fun site to search for, check-in, rate and interact with others about you favo
 In my experience, craft beer aficionados are largely men, but not only. I think the interest is targeted at both genders, and anyone 21 and up. Anyone who loves beer and cares to talk about it is welcome!
 
 ## Data Source
-API: [https://untappd.com/api/docs](https://untappd.com/api/docs)
+API: [https://untappd.com/api/docs](https://untappd.com/api/docs) &larr; as of 8/18/22, the API was not allowing any new applications, so I ended building my own DB and API 
 
 APP DB: PostgreSQL
 
