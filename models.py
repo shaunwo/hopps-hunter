@@ -14,8 +14,8 @@ class Wishlist(db.Model):
     wishlist_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(db.Integer,db.ForeignKey('users.user_id', ondelete='CASCADE'),nullable=False)
     beer_id = db.Column(db.Integer,nullable=False)
-    created_dt = db.Column(db.DateTime,nullable=False,default=datetime.utcnow())
-    last_updated_dt = db.Column(db.DateTime,nullable=False,default=datetime.utcnow())
+    created_dt = db.Column(db.DateTime,nullable=False,default=datetime.now())
+    last_updated_dt = db.Column(db.DateTime,nullable=False,default=datetime.now())
     deleted_dt = db.Column(db.DateTime,nullable=True)
     __table_args__ = (
         db.UniqueConstraint('beer_id', 'user_id', name='uix_1'),
@@ -43,8 +43,8 @@ class User(db.Model):
     bio = db.Column(db.Text)
     private = db.Column(db.Boolean)
     image_url = db.Column(db.Text,default="/static/images/default-pic.png")
-    created_dt = db.Column(db.DateTime,nullable=False,default=datetime.utcnow())
-    last_updated_dt = db.Column(db.DateTime,nullable=False,default=datetime.utcnow())
+    created_dt = db.Column(db.DateTime,nullable=False,default=datetime.now())
+    last_updated_dt = db.Column(db.DateTime,nullable=False,default=datetime.now())
     deleted_dt = db.Column(db.DateTime,nullable=True)
     
     wishlist = db.relationship(
@@ -112,9 +112,20 @@ class UserConnection(db.Model):
     connection_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     connector_user_id = db.Column(db.Integer,db.ForeignKey('users.user_id', ondelete='CASCADE'),nullable=False)
     connectee_user_id = db.Column(db.Integer,db.ForeignKey('users.user_id', ondelete='CASCADE'),nullable=False)
-    created_dt = db.Column(db.DateTime,nullable=False,default=datetime.utcnow())
-    last_updated_dt = db.Column(db.DateTime,nullable=False,default=datetime.utcnow())
+    created_dt = db.Column(db.DateTime,nullable=False,default=datetime.now())
+    last_updated_dt = db.Column(db.DateTime,nullable=False,default=datetime.now())
+    approved_dt = db.Column(db.DateTime,nullable=True)
     deleted_dt = db.Column(db.DateTime,nullable=True)
+    __table_args__ = (
+        db.UniqueConstraint('connector_user_id', 'connectee_user_id', name='uix_2'),
+    )
+
+    @classmethod
+    def add(cls, connector_user_id, connectee_user_id):
+        follow = UserConnection(connector_user_id=connector_user_id, connectee_user_id=connectee_user_id,)
+        
+        db.session.add(follow)
+        return follow
 
 class UserNotification(db.Model):
     
@@ -124,7 +135,7 @@ class UserNotification(db.Model):
     user_id = db.Column(db.Integer,db.ForeignKey('users.user_id', ondelete='CASCADE'),nullable=False)
     text = db.Column(db.Text)
     viewed = db.Column(db.Boolean)
-    created_dt = db.Column(db.DateTime,nullable=False,default=datetime.utcnow())
+    created_dt = db.Column(db.DateTime,nullable=False,default=datetime.now())
 
 class Follow(db.Model):
     
@@ -135,8 +146,8 @@ class Follow(db.Model):
     brewery_id = db.Column(db.Integer,nullable=True)
     beer_id = db.Column(db.Integer,nullable=True)
     style_id = db.Column(db.Integer,nullable=True)
-    created_dt = db.Column(db.DateTime,nullable=False,default=datetime.utcnow())
-    last_updated_dt = db.Column(db.DateTime,nullable=False,default=datetime.utcnow())
+    created_dt = db.Column(db.DateTime,nullable=False,default=datetime.now())
+    last_updated_dt = db.Column(db.DateTime,nullable=False,default=datetime.now())
     deleted_dt = db.Column(db.DateTime,nullable=True)
 
 class Checkin(db.Model):
@@ -153,8 +164,8 @@ class Checkin(db.Model):
     purchase_location = db.Column(db.Text,nullable=True)
     rating = db.Column(db.Float,nullable=True)
     image_url = db.Column(db.String,nullable=True)
-    created_dt = db.Column(db.DateTime,nullable=False,default=datetime.utcnow())
-    last_updated_dt = db.Column(db.DateTime,nullable=False,default=datetime.utcnow())
+    created_dt = db.Column(db.DateTime,nullable=False,default=datetime.now())
+    last_updated_dt = db.Column(db.DateTime,nullable=False,default=datetime.now())
     deleted_dt = db.Column(db.DateTime,nullable=True)
 
     @classmethod
@@ -164,6 +175,21 @@ class Checkin(db.Model):
         db.session.add(checkin)
         return checkin
 
+    @classmethod
+    def edit(cls, checkin_id, comments, serving_size, purchase_location, rating, image_url):
+        """Update user profile info.
+        Hashes password and updates user in system.
+        """
+        checkin = cls.query.filter_by(checkin_id=checkin_id).first()
+        checkin.comments=comments
+        checkin.serving_size=serving_size
+        checkin.purchase_location=purchase_location
+        checkin.rating=rating
+        checkin.image_url=image_url
+        checkin.last_updated_dt=datetime.now()
+        db.session.commit()
+        return checkin
+
 class Toast(db.Model):
     
     __tablename__ = 'toasts'
@@ -171,8 +197,8 @@ class Toast(db.Model):
     toast_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(db.Integer,db.ForeignKey('users.user_id', ondelete='CASCADE'),nullable=False)
     checkin_id = db.Column(db.Integer,db.ForeignKey('checkins.checkin_id', ondelete='CASCADE'),nullable=False)
-    created_dt = db.Column(db.DateTime,nullable=False,default=datetime.utcnow())
-    last_updated_dt = db.Column(db.DateTime,nullable=False,default=datetime.utcnow())
+    created_dt = db.Column(db.DateTime,nullable=False,default=datetime.now())
+    last_updated_dt = db.Column(db.DateTime,nullable=False,default=datetime.now())
     deleted_dt = db.Column(db.DateTime,nullable=True)
 
 class ToastComment(db.Model):
@@ -182,8 +208,8 @@ class ToastComment(db.Model):
     toast_comment_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     toast_id = db.Column(db.Integer,db.ForeignKey('toasts.toast_id', ondelete='CASCADE'),nullable=False)
     comments = db.Column(db.Text,nullable=True)
-    created_dt = db.Column(db.DateTime,nullable=False,default=datetime.utcnow())
-    last_updated_dt = db.Column(db.DateTime,nullable=False,default=datetime.utcnow())
+    created_dt = db.Column(db.DateTime,nullable=False,default=datetime.now())
+    last_updated_dt = db.Column(db.DateTime,nullable=False,default=datetime.now())
     deleted_dt = db.Column(db.DateTime,nullable=True)
 
 def connect_db(app):

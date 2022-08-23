@@ -1,0 +1,11 @@
+{% extends 'base.html' %} {% block title %}Hopps Hunter | My Activity{% endblock
+%} {% block content %}
+
+<h1>My Activity</h1>
+
+{% if ratings %} {% if ratings|length == 0 %}
+<h2>Sorry, no recent checkins. Do some of your own checkins, today!</h2>
+{% else %}
+<h2>Checkins</h2>
+{% for rating in ratings %} {% include 'activity/rating_card.html' %} {% endfor
+%} {% endif %} {% endif %}{% endblock %}

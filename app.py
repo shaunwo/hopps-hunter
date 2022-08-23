@@ -124,6 +124,11 @@ def logout():
 # END USER SIGNUP/LOGIN/LOGOUT ROUTES 
 ##############################################################################
 
+
+##############################################################################
+# BEGIN ACTIVITY ROUTES 
+##############################################################################
+
 # displaying the recent activity
 @app.route('/activity')
 def activity_page():
@@ -133,7 +138,52 @@ def activity_page():
         flash("Access unauthorized.", "danger")
         return redirect("/user/login")
     
-    return render_template('activity/index.html')
+    # pulling recent checkins
+    ratings = (Checkin.query
+                .order_by(Checkin.created_dt.desc())
+                .limit(100)
+                .all())
+
+    return render_template('activity/index.html', ratings=ratings)
+
+# follow someone
+@app.route('/activity/follow/<int:connectee_user_id>', methods=['GET'])
+def follow_user_page(connectee_user_id):
+    
+    # checking to see if the user has signed in
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/user/login")
+    
+    follow = User.query.get_or_404(connectee_user_id)
+
+    try:
+        connection = UserConnection.add(
+            connector_user_id=session[CURR_USER_KEY],
+            connectee_user_id=connectee_user_id,
+        )
+        db.session.commit()
+
+    except IntegrityError as error:
+        # flash(f"{error}", 'danger')
+        # flash(f"Not able to follow {follow.username}. Did you already send a follow request for that user?", "danger")
+        message = Markup("Error capturing the follow request. Did you already try to follow that person?")
+        flash(message, 'danger')
+        return redirect('/activity')
+    
+    if connection:
+        flash(f"Follow request sent for {follow.username}", "success")
+    
+    return redirect('/activity')
+
+##############################################################################
+# END ACTIVITY ROUTES 
+##############################################################################
+
+
+##############################################################################
+# BEGIN FOLLOWERS/FRIENDS ROUTES 
+##############################################################################
 
 # displaying the followers
 @app.route('/followers')
@@ -144,7 +194,17 @@ def followers_page():
         flash("Access unauthorized.", "danger")
         return redirect("/user/login")
     
-    return render_template('followers/index.html')
+    # pulling follow requests
+    followers = (UserConnection.query
+                .filter(UserConnection.connectee_user_id==session[CURR_USER_KEY])
+                .order_by(UserConnection.created_dt.desc())
+                .all())
+    
+    return render_template('followers/index.html', followers=followers)
+
+##############################################################################
+# END FOLLOWERS/FRIENDS ROUTES 
+##############################################################################
 
 
 ##############################################################################
@@ -213,6 +273,7 @@ def style_beers(style_id):
 ##############################################################################
 @app.route('/beer/checkin/<int:beer_id>', methods=['GET', 'POST'])
 def checkin_beer(beer_id):
+    
     beer = Beer.query.get_or_404(beer_id)
     
     form = BeerCheckinForm()
@@ -290,6 +351,109 @@ def profile_page():
         return redirect("/user/login")
     
     return render_template('profile/index.html')
+
+# profile checkins
+@app.route('/profile/checkins')
+def mycheckins_page():
+    
+    # checking to see if the user has signed in
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/user/login")
+    
+    # pulling recent checkins
+    ratings = (Checkin.query
+                .filter(Checkin.user_id==session[CURR_USER_KEY])
+                .order_by(Checkin.created_dt.desc())
+                .limit(100)
+                .all())
+
+    return render_template('profile/checkins.html', ratings=ratings)
+
+# edit profile checkins
+@app.route('/profile/checkin/edit/<int:checkin_id>', methods=['GET', 'POST'])
+def edit_checkin_page(checkin_id):
+    
+    # checking to see if the user has signed in
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/user/login")
+    
+    # pulling recent checkins
+    checkin = Checkin.query.get_or_404(checkin_id)
+    form = BeerCheckinForm(obj=checkin)
+    beer = Beer.query.get_or_404(checkin.beer_id)
+
+    if form.validate_on_submit():
+        try:
+            checkin = Checkin.edit(
+                checkin_id=checkin_id,
+                comments=form.comments.data,
+                serving_size=form.serving_size.data,
+                purchase_location=form.purchase_location.data,
+                rating=form.rating.data,
+                image_url=form.image_url.data,
+            )
+
+        except IntegrityError as error:
+            # flash(f"{error}", 'danger')
+            flash("Error saving to the database. Please try again.", 'danger')
+            return render_template('/profile/edit.html')
+
+        flash(f"Checkin updated!", "success")
+        return redirect('/profile/checkins')
+
+    else:
+        return render_template('profile/edit_checkin.html', checkin=checkin, beer=beer, form=form)
+
+# edit profile checkins
+@app.route('/profile/checkin/delete/<int:checkin_id>', methods=['GET'])
+def delete_checkin_page(checkin_id):
+    
+    # checking to see if the user has signed in
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/user/login")
+    
+    try:
+        db.session.query(Checkin).filter(Checkin.checkin_id==checkin_id).delete()
+        db.session.commit()
+
+    except IntegrityError as error:
+        # flash(f"{error}", 'danger')
+        flash("Error saving to the database. Please try again.", 'danger')
+        return redirect('/profile/checkins')
+
+    flash(f"Checkin deleted!", "success")
+    return redirect('/profile/checkins')
+
+
+# displaying the profile following
+@app.route('/profile/following')
+def following_page():
+
+    # checking to see if the user has signed in
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/user/login")
+
+    # pulling follow requests
+    followings = (UserConnection.query
+                .filter(UserConnection.connector_user_id==session[CURR_USER_KEY])
+                .order_by(UserConnection.created_dt.desc())
+                .with_entities(UserConnection.connectee_user_id)
+                .all())
+    
+    converted = list(followings);
+    flash(f"followings: {list(followings)}", "success")
+    flash(f"converted: {converted}", "success")
+
+    users = (User.query
+            .filter(User.user_id.in_([list(followings)])))
+    
+    flash(f"users: {users}", "success")
+    return render_template('profile/following.html', followings=followings)
+
 
 # displaying the profile wishlist
 @app.route('/profile/wishlist', methods=['GET', 'POST'])

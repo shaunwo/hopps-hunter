@@ -1,0 +1,25 @@
+<div class="card">
+	<div class="card-body">
+		{% if rating.comments|length %} {{rating.comments}}<br />{% endif %}
+		Serving Style: {{rating.serving_size}}<br />
+		rating.user_id: {{rating.user_id}}<br />
+		by {% if rating.user_id != session['curr_user'] %}<a
+			href="/activity/follow/{{rating.user_id}}"
+			title="Follow {{rating.user_id}}"
+			>{{rating.user_id}}</a
+		>{% else %}{{rating.user_id}}{% endif %} on
+		{{rating.created_dt.strftime('%A %B %-d, %Y at %I:%M% %p')}}<br />
+		{% if rating.user_id == session['curr_user'] %}
+		<a
+			href="/profile/checkin/edit/{{rating.checkin_id}}"
+			class="btn-sm btn-primary"
+			>Edit</a
+		>
+		<a
+			href="/profile/checkin/delete/{{rating.checkin_id}}"
+			class="btn-sm btn-danger"
+			>Delete</a
+		>
+		{% endif %}
+	</div>
+</div>
