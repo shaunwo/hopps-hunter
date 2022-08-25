@@ -4,9 +4,9 @@
 		Serving Style: {{rating.serving_size}}<br />
 		rating.user_id: {{rating.user_id}}<br />
 		by {% if rating.user_id != session['curr_user'] %}<a
-			href="/activity/follow/{{rating.user_id}}"
-			title="Follow {{rating.user_id}}"
-			>{{rating.user_id}}</a
+			href="/activity/profile/{{rating.user_id}}"
+			title="Follow {{rating.username}}"
+			>{{rating.username}}</a
 		>{% else %}{{rating.user_id}}{% endif %} on
 		{{rating.created_dt.strftime('%A %B %-d, %Y at %I:%M% %p')}}<br />
 		{% if rating.user_id == session['curr_user'] %}

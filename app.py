@@ -12,6 +12,8 @@ from api_models import Beer, Brewery, Style
 from forms import SignupForm, LoginForm, SearchForm, BeerCheckinForm, EditProfileForm, ChangePWForm
 
 CURR_USER_KEY = "curr_user"
+USER_WISHLIST = "wishlist"
+USER_FOLLOWING = "following"
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql:///hopps_hunter"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -48,6 +50,13 @@ def do_login(user):
 
     session[CURR_USER_KEY] = user.user_id
 
+    # adding items on user's wishlist to session
+    wishlist_ids = Wishlist.query.filter(Wishlist.user_id == session[CURR_USER_KEY]).with_entities(Wishlist.beer_id).order_by(Wishlist.created_dt.desc()).all()
+    session[USER_WISHLIST] = [id for id, in wishlist_ids]
+    
+    # adding user's following to session
+    following_ids = UserConnection.query.filter(UserConnection.connector_user_id == session[CURR_USER_KEY]).with_entities(UserConnection.connectee_user_id).order_by(UserConnection.created_dt.desc()).all()
+    session[USER_FOLLOWING] = [id for id, in following_ids]
 
 def do_logout():
     """Logout user."""
@@ -146,9 +155,23 @@ def activity_page():
 
     return render_template('activity/index.html', ratings=ratings)
 
+# displaying the profile for another use to follow
+@app.route('/activity/profile/<int:user_id>', methods=['GET'])
+def other_profile_page(user_id):
+
+    # checking to see if the user has signed in
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/user/login")
+    
+    # pulling profile info
+    profile = User.query.get_or_404(user_id)
+    
+    return render_template('activity/profile.html', profile=profile)
+
 # follow someone
 @app.route('/activity/follow/<int:connectee_user_id>', methods=['GET'])
-def follow_user_page(connectee_user_id):
+def follow_user(connectee_user_id):
     
     # checking to see if the user has signed in
     if not g.user:
@@ -166,15 +189,40 @@ def follow_user_page(connectee_user_id):
 
     except IntegrityError as error:
         # flash(f"{error}", 'danger')
-        # flash(f"Not able to follow {follow.username}. Did you already send a follow request for that user?", "danger")
         message = Markup("Error capturing the follow request. Did you already try to follow that person?")
         flash(message, 'danger')
-        return redirect('/activity')
+        return redirect(f'/activity/profile/{connectee_user_id}')
     
     if connection:
+        session[USER_FOLLOWING].append(connectee_user_id)
         flash(f"Follow request sent for {follow.username}", "success")
     
-    return redirect('/activity')
+    return redirect(f'/activity/profile/{connectee_user_id}')
+
+# follow someone
+@app.route('/activity/unfollow/<int:connectee_user_id>', methods=['GET'])
+def unfollow_user(connectee_user_id):
+
+    # checking to see if the user has signed in
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/user/login")
+
+    user = User.query.get_or_404(connectee_user_id)
+
+    try:
+        db.session.query(UserConnection).filter(UserConnection.connectee_user_id==connectee_user_id).delete()
+        db.session.commit()
+
+    except IntegrityError as error:
+        # flash(f"{error}", 'danger')
+        flash("Error deleting from the database. Please try again.", 'danger')
+        return redirect(f'/activity/profile/{connectee_user_id}')
+
+    session[USER_FOLLOWING].remove(connectee_user_id)
+    flash(f"You have unfollowed {user.username}.", "success")
+
+    return redirect(f'/activity/profile/{connectee_user_id}')
 
 ##############################################################################
 # END ACTIVITY ROUTES 
@@ -228,7 +276,7 @@ def search_page():
         beers = None
         breweries = None
         styles = None
-        
+
         # searching each possible source
         if (form.searchfor.data == 'Beer' or form.searchfor.data == 'ALL'):
             beers = Beer.query.filter(Beer.name.ilike(f"%{form.search.data}%")).order_by(Beer.name.asc()).all()
@@ -307,11 +355,9 @@ def checkin_beer(beer_id):
     
     return render_template('beer/checkin.html', beer=beer, form=form)
 
-@app.route('/beer/wishlist/<int:beer_id>', methods=['GET', 'POST'])
-def wishlist_beer(beer_id):
+@app.route('/beer/wishlist/add/<int:beer_id>', methods=['GET', 'POST'])
+def wishlist_add_beer(beer_id):
     
-    form = SearchForm()
-
     beer = Beer.query.get_or_404(beer_id)
 
     try:
@@ -323,14 +369,38 @@ def wishlist_beer(beer_id):
 
     except IntegrityError as error:
         # flash(f"{error}", 'danger')
-        message = Markup("Error capturing the wishlist addition. Is it already on your <a href=\"/user/wishlist\">wishlist</a>?")
+        message = Markup("Error capturing the wishlist addition. Is it already on your <a href=\"/profile/wishlist\">wishlist</a>?")
         flash(message, 'danger')
-        return render_template('/profile/wishlist.html')
+        return redirect('/profile/wishlist')
     
     if wishlist:
-        flash(f"{beer.name} added to your wishlist", "success")
+        session[USER_WISHLIST].append(beer_id)
+    flash(f"{beer.name} added to your wishlist", "success")
     
-    return render_template('/profile/wishlist.html')
+    return redirect('/search')
+
+@app.route('/beer/wishlist/delete/<int:beer_id>', methods=['GET', 'POST'])
+def wishlist_delete_beer(beer_id):
+    
+    # checking to see if the user has signed in
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/user/login")
+    
+    beer = Beer.query.get_or_404(beer_id)
+
+    try:
+        db.session.query(Wishlist).filter(Wishlist.beer_id==beer_id, Wishlist.user_id==session[CURR_USER_KEY]).delete()
+        session[USER_WISHLIST].remove(beer_id)
+        db.session.commit()
+
+    except IntegrityError as error:
+        # flash(f"{error}", 'danger')
+        flash("Error saving to the database. Please try again.", 'danger')
+        return redirect('/profile/checkins')
+
+    flash(f"{beer.name} deleted from your wishlist", "success")
+    return redirect(request.referrer)
 
 ##############################################################################
 # END BEER/BREWERY/STYLE CHECKIN AND WISHLIST ROUTES 
@@ -445,11 +515,15 @@ def following_page():
                 .all())
     
     converted = list(followings);
+    
+    converted2 = [id for id, in followings]
+    
     flash(f"followings: {list(followings)}", "success")
     flash(f"converted: {converted}", "success")
+    flash(f"converted2: {converted2}", "success")
 
     users = (User.query
-            .filter(User.user_id.in_([list(followings)])))
+            .filter(User.user_id.in_([tuple(converted2)])))
     
     flash(f"users: {users}", "success")
     return render_template('profile/following.html', followings=followings)

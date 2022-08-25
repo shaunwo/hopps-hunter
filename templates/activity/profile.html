@@ -1,0 +1,19 @@
+{% extends 'base.html' %} {% block title %}Hopps Hunter | Profile for
+{{profile.username}}{% endblock %} {% block content %}
+
+<h1>Profile for {{profile.username}}</h1>
+<p>{{profile.bio}}</p>
+<p>
+	<strong>Number of Checkins</strong>: TBD<br />
+	<strong>Follows</strong>: TBD<br />
+	<strong>Followings</strong>: TBD<br />
+</p>
+{% if profile.user_id not in session['following'] %}
+<a href="/activity/follow/{{profile.user_id}}" class="btn btn-primary"
+	>Follow</a
+>
+{% else %}
+<a href="/activity/unfollow/{{profile.user_id}}" class="btn btn-danger"
+	><strong>Unfollow</strong></a
+>
+{% endif %} {% endblock %}

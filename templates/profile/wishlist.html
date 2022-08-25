@@ -6,7 +6,13 @@ endblock %} {% block content %}
 {% for beer in wishlist %}
 <div class="card">
 	<div class="card-body">
-		<h3 class="card-title">{{ beer.beer_id }}</h3>
+		<h3 class="card-title">Beer ID: {{ beer.beer_id }}</h3>
+		<p>(Need to tie into the API, yet)</p>
+		<a
+			href="/beer/wishlist/delete/{{beer.beer_id}}"
+			class="btn btn-danger"
+			><strong>DELETE</strong> from Wishlist</a
+		>
 	</div>
 </div>
 {% endfor %} {% endblock %}

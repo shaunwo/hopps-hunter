@@ -168,6 +168,8 @@ class Checkin(db.Model):
     last_updated_dt = db.Column(db.DateTime,nullable=False,default=datetime.now())
     deleted_dt = db.Column(db.DateTime,nullable=True)
 
+    username = db.relationship("User", primaryjoin="Checkin.user_id == User.user_id")
+
     @classmethod
     def add(cls, user_id, beer_id, brewery_id, style_id, comments, serving_size, purchase_location, rating, image_url):
         checkin = Checkin(user_id=user_id, beer_id=beer_id, brewery_id=brewery_id, style_id=style_id, comments=comments, serving_size=serving_size, purchase_location=purchase_location, rating=rating, image_url=image_url)

@@ -9,8 +9,18 @@
 		<a href="/beer/checkin/{{beer.id}}" class="btn btn-success"
 			>Check In</a
 		>
-		<a href="/beer/wishlist/{{beer.id}}" class="btn btn-primary"
+		{% if beer.id not in session['wishlist'] %}
+		<a
+			href="/beer/wishlist/add/{{beer.id}}?q={{form.search.data}}"
+			class="btn btn-primary"
 			>Add to Wishlist</a
 		>
+		{% else %}
+		<a
+			href="/beer/wishlist/delete/{{beer.id}}?q={{form.search.data}}"
+			class="btn btn-danger"
+			><strong>DELETE</strong> from Wishlist</a
+		>
+		{% endif %}
 	</div>
 </div>
