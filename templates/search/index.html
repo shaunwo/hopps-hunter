@@ -3,9 +3,9 @@
 
 <h1>Search for Beers</h1>
 
-<form method="POST" action="/search" id="search-form">
-	{{ form.hidden_tag() }} {% for field in form if field.widget.input_type !=
-	'hidden' %} {% for error in field.errors %}
+<form id="search-form">
+	{% for field in form if field.widget.input_type != 'hidden' %} {% for error
+	in field.errors %}
 	<span class="text-danger">{{ error }}</span>
 	{% endfor %} {{ field(placeholder=field.label.text, class="form-control")
 	}} {% endfor %}
@@ -45,7 +45,6 @@ endif %} {% endif %} {% if breweries %} {% if breweries|length == 0 %}
 		<a href="/search/brewery/{{brewery.id}}" class="btn btn-success"
 			>Show Beers</a
 		>
-		<a href="#" class="btn btn-primary">Add to Wishlist</a>
 	</div>
 </div>
 {% endfor %} {% endif %} {% endif %} {% if styles %} {% if styles|length == 0 %}
@@ -59,7 +58,6 @@ endif %} {% endif %} {% if breweries %} {% if breweries|length == 0 %}
 		<a href="/search/style/{{style.id}}" class="btn btn-success"
 			>Show Beers</a
 		>
-		<a href="#" class="btn btn-primary">Add to Wishlist</a>
 	</div>
 </div>
 {% endfor %} {% endif %} {% endif %} {% endblock %}

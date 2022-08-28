@@ -1,23 +1,24 @@
 from ast import MatchSequence
 from importlib.resources import as_file
 from pickle import FALSE
-from flask import Flask, render_template, redirect, request, session, flash, g, Markup
+from flask import Flask, render_template, redirect, request, session, flash, g, Markup, jsonify
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 from flask_bcrypt import Bcrypt
 from werkzeug.exceptions import Unauthorized
 
-from models import db, connect_db, User, UserConnection, UserNotification, Follow, Checkin, Toast, ToastComment, Wishlist
+from models import db, connect_db, User, UserConnection, Checkin, CheckinToast, CheckinComment, Wishlist
 from api_models import Beer, Brewery, Style
-from forms import SignupForm, LoginForm, SearchForm, BeerCheckinForm, EditProfileForm, ChangePWForm
+from forms import SignupForm, LoginForm, SearchForm, BeerCheckinForm, EditProfileForm, ChangePWForm, CheckinCommentsForm
 
 CURR_USER_KEY = "curr_user"
 USER_WISHLIST = "wishlist"
 USER_FOLLOWING = "following"
+USER_FOLLOWERS = "followers"
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql:///hopps_hunter"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.config['SQLALCHEMY_ECHO'] = False
+app.config['SQLALCHEMY_ECHO'] = True
 app.config["SECRET_KEY"] = "noneofyourbusiness"
 app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
 
@@ -57,6 +58,10 @@ def do_login(user):
     # adding user's following to session
     following_ids = UserConnection.query.filter(UserConnection.connector_user_id == session[CURR_USER_KEY]).with_entities(UserConnection.connectee_user_id).order_by(UserConnection.created_dt.desc()).all()
     session[USER_FOLLOWING] = [id for id, in following_ids]
+
+    # adding user's followers to session
+    followers_ids = UserConnection.query.filter(UserConnection.connectee_user_id == session[CURR_USER_KEY]).with_entities(UserConnection.connector_user_id).order_by(UserConnection.created_dt.desc()).all()
+    session[USER_FOLLOWERS] = [id for id, in following_ids]
 
 def do_logout():
     """Logout user."""
@@ -147,13 +152,96 @@ def activity_page():
         flash("Access unauthorized.", "danger")
         return redirect("/user/login")
     
+    form = CheckinCommentsForm()
+    
     # pulling recent checkins
     ratings = (Checkin.query
                 .order_by(Checkin.created_dt.desc())
                 .limit(100)
                 .all())
 
-    return render_template('activity/index.html', ratings=ratings)
+    return render_template('activity/index.html', ratings=ratings, form=form)
+
+# displaying the recent activity for ONE user
+@app.route('/activity/<int:user_id>', methods=['GET'])
+def user_activity_page(user_id):
+    
+    # checking to see if the user has signed in
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/user/login")
+    
+    form = CheckinCommentsForm()
+    user = User.query.get_or_404(user_id)
+
+    # pulling recent checkins
+    ratings = (Checkin.query
+                .filter(Checkin.user_id==user_id)
+                .order_by(Checkin.created_dt.desc())
+                .limit(100)
+                .all())
+
+    return render_template('activity/index.html', ratings=ratings, user=user, form=form)
+
+# toast someone else's checkin
+@app.route('/activity/toast/<int:checkin_id>', methods=['GET'])
+def checkin_toast(checkin_id):
+    
+    # checking to see if the user has signed in
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/user/login")
+    
+    try:
+        toast = CheckinToast.add(
+            user_id=session[CURR_USER_KEY],
+            checkin_id=checkin_id,
+        )
+        db.session.commit()
+
+    except IntegrityError as error:
+        # flash(f"{error}", 'danger')
+        message = Markup("Error capturing the toast addition. Please try again.")
+        flash(message, 'danger')
+        return redirect(request.referrer)
+    
+    if toast:
+        flash(f"Thanks for your toast!", "success")
+        return redirect(request.referrer)
+
+    return render_template('activity/index.html')
+
+# leave a comment on someone else's checkin
+@app.route('/activity/comment/<int:checkin_id>', methods=['POST'])
+def checkin_comment(checkin_id):
+    
+    # checking to see if the user has signed in
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/user/login")
+    
+    checkin = Checkin.query.get_or_404(checkin_id)
+    form = CheckinCommentsForm(obj=checkin)
+    
+    try:
+        comment = CheckinComment.add(
+            user_id=session[CURR_USER_KEY],
+            checkin_id=checkin_id,
+            comments=form.comments.data,
+        )
+        db.session.commit()
+
+    except IntegrityError as error:
+        # flash(f"{error}", 'danger')
+        message = Markup("Error capturing the comments addition. Please try again.")
+        flash(message, 'danger')
+        return redirect(request.referrer)
+    
+    if comment:
+        flash(f"Thanks for your comment!", "success")
+        return redirect(request.referrer)
+
+    return render_template('activity/index.html')
 
 # displaying the profile for another use to follow
 @app.route('/activity/profile/<int:user_id>', methods=['GET'])
@@ -245,10 +333,40 @@ def followers_page():
     # pulling follow requests
     followers = (UserConnection.query
                 .filter(UserConnection.connectee_user_id==session[CURR_USER_KEY])
+                .with_entities(UserConnection.connector_user_id)
                 .order_by(UserConnection.created_dt.desc())
                 .all())
+    followers_ids = [id for id, in followers]
     
-    return render_template('followers/index.html', followers=followers)
+    users = (User.query
+            .filter(User.user_id.in_(followers_ids))).all()
+    
+    return render_template('followers/index.html', users=users)
+
+@app.route('/followers/block/<int:connector_user_id>')
+def block_follower(connector_user_id):
+    
+    # checking to see if the user has signed in
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/user/login")
+    
+    user = User.query.get_or_404(connector_user_id)
+
+    # deleting follow requests
+    try:
+        db.session.query(UserConnection).filter(UserConnection.connector_user_id==connector_user_id, UserConnection.connectee_user_id==session[CURR_USER_KEY]).delete()
+        db.session.commit()
+
+    except IntegrityError as error:
+        # flash(f"{error}", 'danger')
+        flash("Error saving to the database. Please try again.", 'danger')
+        return redirect('/profile/checkins')
+
+    session[USER_FOLLOWERS].remove(connector_user_id)
+    flash(f"You have blocked {user.username}.", "success")
+    return redirect("/followers")
+
 
 ##############################################################################
 # END FOLLOWERS/FRIENDS ROUTES 
@@ -260,7 +378,7 @@ def followers_page():
 ##############################################################################
 
 # displaying the search
-@app.route('/search', methods=['GET', 'POST'])
+@app.route('/search', methods=['GET'])
 def search_page():
 
     # checking to see if the user has signed in
@@ -268,9 +386,9 @@ def search_page():
         flash("Access unauthorized.", "danger")
         return redirect("/user/login")
     
-    form = SearchForm()
+    form = SearchForm(request.args)
     
-    if form.validate_on_submit():
+    if request.args.get('search'):
         
         # defining empty variables
         beers = None
@@ -278,12 +396,12 @@ def search_page():
         styles = None
 
         # searching each possible source
-        if (form.searchfor.data == 'Beer' or form.searchfor.data == 'ALL'):
-            beers = Beer.query.filter(Beer.name.ilike(f"%{form.search.data}%")).order_by(Beer.name.asc()).all()
-        if (form.searchfor.data == 'Brewery' or form.searchfor.data == 'ALL'):
-            breweries = Brewery.query.filter(Brewery.name.ilike(f"%{form.search.data}%")).order_by(Brewery.name.asc()).all()
-        if (form.searchfor.data == 'Style' or form.searchfor.data == 'ALL'):
-            styles = Style.query.filter(Style.style_name.ilike(f"%{form.search.data}%")).order_by(Style.style_name.asc()).all()
+        if (request.args.get('searchfor') == 'Beer' or request.args.get('searchfor') == 'ALL'):
+            beers = Beer.query.filter(Beer.name.ilike(f"%{request.args.get('search')}%")).order_by(Beer.name.asc()).all()
+        if (request.args.get('searchfor') == 'Brewery' or request.args.get('searchfor') == 'ALL'):
+            breweries = Brewery.query.filter(Brewery.name.ilike(f"%{request.args.get('search')}%")).order_by(Brewery.name.asc()).all()
+        if (request.args.get('searchfor') == 'Style' or request.args.get('searchfor') == 'ALL'):
+            styles = Style.query.filter(Style.style_name.ilike(f"%{request.args.get('search')}%")).order_by(Style.style_name.asc()).all()
 
         if beers == None and breweries == None and styles == None:
             flash("Sorry... no matches to that search. Please try another search.", 'danger')
@@ -352,10 +470,11 @@ def checkin_beer(beer_id):
         
         if checkin:
             flash(f"Your checkin for {beer.name} was added!", "success")
+            return redirect('/profile/checkins')
     
     return render_template('beer/checkin.html', beer=beer, form=form)
 
-@app.route('/beer/wishlist/add/<int:beer_id>', methods=['GET', 'POST'])
+@app.route('/beer/wishlist/add/<int:beer_id>', methods=['GET'])
 def wishlist_add_beer(beer_id):
     
     beer = Beer.query.get_or_404(beer_id)
@@ -371,15 +490,15 @@ def wishlist_add_beer(beer_id):
         # flash(f"{error}", 'danger')
         message = Markup("Error capturing the wishlist addition. Is it already on your <a href=\"/profile/wishlist\">wishlist</a>?")
         flash(message, 'danger')
-        return redirect('/profile/wishlist')
+        return redirect(request.referrer)
     
     if wishlist:
         session[USER_WISHLIST].append(beer_id)
-    flash(f"{beer.name} added to your wishlist", "success")
-    
-    return redirect('/search')
+        flash(f"{beer.name} added to your wishlist", "success")
 
-@app.route('/beer/wishlist/delete/<int:beer_id>', methods=['GET', 'POST'])
+    return redirect(request.referrer)
+
+@app.route('/beer/wishlist/delete/<int:beer_id>', methods=['GET'])
 def wishlist_delete_beer(beer_id):
     
     # checking to see if the user has signed in
@@ -396,8 +515,8 @@ def wishlist_delete_beer(beer_id):
 
     except IntegrityError as error:
         # flash(f"{error}", 'danger')
-        flash("Error saving to the database. Please try again.", 'danger')
-        return redirect('/profile/checkins')
+        flash("Error deleting this wishlist item from the database. Please try again.", 'danger')
+        return redirect(request.referrer)
 
     flash(f"{beer.name} deleted from your wishlist", "success")
     return redirect(request.referrer)
@@ -513,20 +632,12 @@ def following_page():
                 .order_by(UserConnection.created_dt.desc())
                 .with_entities(UserConnection.connectee_user_id)
                 .all())
+    followings_ids = [id for id, in followings]
     
-    converted = list(followings);
-    
-    converted2 = [id for id, in followings]
-    
-    flash(f"followings: {list(followings)}", "success")
-    flash(f"converted: {converted}", "success")
-    flash(f"converted2: {converted2}", "success")
-
     users = (User.query
-            .filter(User.user_id.in_([tuple(converted2)])))
+            .filter(User.user_id.in_(followings_ids))).all()
     
-    flash(f"users: {users}", "success")
-    return render_template('profile/following.html', followings=followings)
+    return render_template('profile/following.html', users=users)
 
 
 # displaying the profile wishlist
@@ -602,7 +713,7 @@ def profile_edit():
                 email=form.email.data,
                 first_name=form.first_name.data,
                 last_name=form.last_name.data,
-                zip_code=form.zip_code.data,
+                location=form.location.data,
                 bio=form.bio.data,
                 private=form.private.data,
                 image_url=form.image_url.data,
@@ -625,18 +736,60 @@ def profile_edit():
 ##############################################################################
 
 # BEGIN API ROUTES
-@app.route('/api/search/beer')
-def api_search_beer():
+@app.route('/api/beer/showall')
+def api_beer_showall():
     beers = Beer.query.order_by(Beer.name.asc()).all()
     return render_template('api/beers/index.html', beers=beers)
 
-@app.route('/api/search/brewery')
-def api_search_brewery():
+@app.route('/api/beer/search', methods=['GET', 'POST'])
+def api_beer_search_by_string():
+
+    search = request.form.get('search')
+    beer_results = [beers.serialize() for beers in Beer.query.filter(Beer.name.ilike(f"%{search}%")).order_by(Beer.name.asc()).all()]
+    flash(f"beer_results: {beer_results}", "success")
+    return render_template('api/beers/index.html')
+    #return jsonify(beers=beer_results)
+
+@app.route('/api/beer/<int:beer_id>', methods=['GET', 'POST'])
+def api_beer_by_id(beer_id):
+    beer = Beer.query.get_or_404(beer_id)
+    flash(f"beer: {beer}", "success")
+    return render_template('api/beers/index.html')
+    #return jsonify(beer=beer.serialize())
+
+@app.route('/api/beers', methods=['GET', 'POST'])
+def api_beers_by_ids():
+    ids = request.args.getlist('ids', type=int)
+    # ids = [5737,3985,8]
+    # http://127.0.0.1:5000/api/beers?ids=5737&ids=3985&ids=8&ids=304&ids=316
+    beer_results = [beers.serialize() for beers in Beer.query.filter(Beer.id.in_(ids)).all()]
+    return jsonify(beers=beer_results)
+    #flash(f"beer_results: {beer_results}", "success")
+    #return render_template('api/beers/index.html')
+
+
+@app.route('/api/brewery/showall')
+def api_brewery_showall():
     breweries = Brewery.query.order_by(Brewery.name.asc()).all()
     return render_template('api/breweries/index.html', breweries=breweries)
 
-@app.route('/api/search/style')
-def api_search_style():
+@app.route('/api/brewery/search', methods=['GET', 'POST'])
+def api_brewery_search_by_string():
+
+    search = request.form.get('search')
+    brewery_results = [breweries.serialize() for breweries in Brewery.query.filter(Brewery.name.ilike(f"%{search}%")).order_by(Brewery.name.asc()).all()]
+    return jsonify(breweries=brewery_results)
+
+@app.route('/api/style/showall')
+def api_style_showall():
     styles = Style.query.order_by(Style.style_name.asc()).all()
     return render_template('api/styles/index.html', styles=styles)
+
+@app.route('/api/style/search', methods=['GET', 'POST'])
+def api_syle_search_by_string():
+
+    search = request.form.get('search')
+    style_results = [styles.serialize() for styles in Style.query.filter(Style.style_name.ilike(f"%{search}%")).order_by(Style.style_name.asc()).all()]
+    return jsonify(styles=style_results)
+
 # END API ROUTES

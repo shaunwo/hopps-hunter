@@ -1,0 +1,13 @@
+<form
+	method="POST"
+	action="/activity/comment/{{rating.checkin_id}}"
+	id="checkin_comment_form"
+>
+	{{ form.hidden_tag() }} {% for field in form if field.widget.input_type !=
+	'hidden' %} {% for error in field.errors %}
+	<span class="text-danger">{{ error }}</span>
+	{% endfor %} {{ field(placeholder=field.label.text, class="form-control")
+	}} {% endfor %}
+	<br />
+	<button class="btn btn-primary">Add Comment</button>
+</form>

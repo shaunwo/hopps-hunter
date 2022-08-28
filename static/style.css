@@ -26,3 +26,15 @@ h2 {
 	font-size: 140%;
 	margin: 15px 0;
 }
+
+.float-md-left {
+	margin: 0 10px 10px 0;
+}
+.card-text,
+.actions {
+	clear: both;
+}
+.text-muted {
+	font-style: italic;
+	font-size: 90%;
+}

@@ -1,3 +1,14 @@
 <div class="card">
-	<div class="card-body">{{follower.connector_user_id}}</div>
+	<div class="card-body">
+		<h3 class="card-title">{{user.username}}</h3>
+		<h4 class="card-subtitle">{{user.location}}</h4>
+		<p>{{user.bio}}</p>
+
+		<a href="/activity/{{user.user_id}}" class="btn btn-primary"
+			>Recent Activity</a
+		>
+		<a href="/followers/block/{{user.user_id}}" class="btn btn-danger"
+			>Block</a
+		>
+	</div>
 </div>

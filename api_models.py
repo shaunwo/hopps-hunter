@@ -46,9 +46,22 @@ class Beer(db.Model):
         db.Text,
         nullable=True,
     )
-
+    
     brewery = db.relationship("Brewery", primaryjoin="Beer.brewery_id == Brewery.id")
     style = db.relationship("Style", primaryjoin="Beer.style_id == Style.id")
+    
+    def serialize(self):
+        
+        """Returns a dict representation of beer which we can turn into JSON"""
+        return {
+            'id': self.id,
+            'brewery_id': self.brewery_id,
+            'name': self.name,
+            'style_id': self.style_id,
+            'abv': self.abv,
+            'ibu': self.ibu,
+            'descript': self.descript
+        }
 
 class Brewery(db.Model):
     
@@ -95,6 +108,20 @@ class Brewery(db.Model):
         nullable=True,
     )
 
+    def serialize(self):
+        
+        """Returns a dict representation of brewery which we can turn into JSON"""
+        
+        return {
+            'id': self.id,
+            'name': self.name,
+            'address1': self.address1,
+            'address2': self.address2,
+            'city': self.city,
+            'country': self.country,
+            'descript': self.descript
+        }
+
 class Style(db.Model):
     
     __tablename__ = 'api_styles'
@@ -109,6 +136,15 @@ class Style(db.Model):
         db.Text,
         nullable=False,
     )
+    
+    def serialize(self):
+        
+        """Returns a dict representation of brewery which we can turn into JSON"""
+        
+        return {
+            'id': self.id,
+            'style_name': self.style_name
+        }
 
 def connect_db(app):
     """Connect this database to provided Flask app.

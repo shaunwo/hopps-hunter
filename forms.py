@@ -38,6 +38,10 @@ class BeerCheckinForm(FlaskForm):
     RATING_CHOICES = ['0.0','0.5','1.0','1.5','2.0','2.5','3.0','3.5','4.0','4.5','5.0']
     rating = SelectField(u'Rating', choices=RATING_CHOICES )
     image_url = StringField('Image')
+
+class CheckinCommentsForm(FlaskForm):
+    """Checkin comments form"""
+    comments = TextAreaField("Comments")
 ##################################################
 ##  END SEARCH / CHECKIN FORMS
 ##################################################
@@ -52,7 +56,7 @@ class EditProfileForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
     first_name = StringField('First Name', validators=[DataRequired()])
     last_name = StringField('Last Name', validators=[DataRequired()])
-    zip_code = StringField('Zip Code')
+    location = StringField('Location')
     bio = TextAreaField('Bio', validators=[DataRequired()])
     private = BooleanField('Private?', validators=[Optional()])
     image_url = StringField('Image', validators=[DataRequired()])

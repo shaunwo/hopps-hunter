@@ -3,8 +3,7 @@
 
 <h1>My Followers</h1>
 
-{% if followers %} {% if followers|length == 0 %}
+{% if users %} {% if users|length == 0 %}
 <h2>Sorry, no followers, yet.</h2>
-{% else %} {% for follower in followers %} {% include
-'followers/follower_card.html' %} {% endfor %} {% endif %} {% endif %}{%
-endblock %}
+{% else %} {% for user in users %} {% include 'followers/follower_card.html' %}
+{% endfor %} {% endif %} {% endif %}{% endblock %}

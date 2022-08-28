@@ -1,11 +1,19 @@
 {% extends 'base.html' %} {% block title %}Hopps Hunter | Recent Activity{%
 endblock %} {% block content %}
+<script>
+	function toggleShowHide(showHideDivID) {
+		const x = document.getElementById(showHideDivID);
+		if (x.style.display === 'none') {
+			x.style.display = 'block';
+		} else {
+			x.style.display = 'none';
+		}
+	}
+</script>
 
-<h1>Recent Activity</h1>
+<h1>Recent Activity{% if user %} by {{user.username}}{% endif %}</h1>
 
 {% if ratings %} {% if ratings|length == 0 %}
 <h2>Sorry, no recent activity. Do some of your own checkins, today!</h2>
-{% else %}
-<h2>Checkins</h2>
-{% for rating in ratings %} {% include 'activity/rating_card.html' %} {% endfor
-%} {% endif %} {% endif %}{% endblock %}
+{% else %} {% for rating in ratings %} {% include 'activity/rating_card.html' %}
+{% endfor %} {% endif %} {% endif %}{% endblock %}

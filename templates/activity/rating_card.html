@@ -1,14 +1,21 @@
 <div class="card">
 	<div class="card-body">
+		Rating: {{rating.rating}}<br />
 		{% if rating.comments|length %} {{rating.comments}}<br />{% endif %}
 		Serving Style: {{rating.serving_size}}<br />
-		rating.user_id: {{rating.user_id}}<br />
-		by {% if rating.user_id != session['curr_user'] %}<a
-			href="/activity/profile/{{rating.user_id}}"
-			title="Follow {{rating.username}}"
-			>{{rating.username}}</a
-		>{% else %}{{rating.user_id}}{% endif %} on
-		{{rating.created_dt.strftime('%A %B %-d, %Y at %I:%M% %p')}}<br />
+		{% if rating.purchase_location|length %}Purchased at:
+		{{rating.purchase_location}}<br />{% endif %} rating.user_id:
+		{{rating.user_id}}<br />
+		<div class="text-muted">
+			by {% if rating.user_id != session['curr_user'] %}<a
+				href="/activity/profile/{{rating.user_id}}"
+				title="Follow {{rating.username}}"
+				>{{rating.username}}</a
+			>{% else %}{{rating.user_id}}{% endif %} on
+			{{rating.created_dt.strftime('%A %B %-d, %Y at %I:%M% %p')}}
+		</div>
+	</div>
+	<div class="card-footer">
 		{% if rating.user_id == session['curr_user'] %}
 		<a
 			href="/profile/checkin/edit/{{rating.checkin_id}}"
@@ -20,6 +27,21 @@
 			class="btn-sm btn-danger"
 			>Delete</a
 		>
+		{% else %}
+		<a
+			href="/activity/toast/{{rating.checkin_id}}"
+			title="Toast this Checkin"
+			class="btn-sm btn-primary"
+			>Toast</a
+		>
+		<a
+			class="btn-sm btn-success"
+			onclick="toggleShowHide('comments{{rating.checkin_id}}')"
+			>Comment</a
+		>
+		<div style="display: none" id="comments{{rating.checkin_id}}">
+			{% include 'activity/checkin_comment.html' %}
+		</div>
 		{% endif %}
 	</div>
 </div>

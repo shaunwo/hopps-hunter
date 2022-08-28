@@ -39,7 +39,7 @@ class User(db.Model):
     email = db.Column(db.Text,nullable=True,unique=True)
     first_name = db.Column(db.Text)
     last_name = db.Column(db.Text)
-    zip_code = db.Column(db.Text)
+    location = db.Column(db.Text)
     bio = db.Column(db.Text)
     private = db.Column(db.Boolean)
     image_url = db.Column(db.Text,default="/static/images/default-pic.png")
@@ -76,7 +76,7 @@ class User(db.Model):
         return user
 
     @classmethod
-    def edit(cls, user_id, username, email, first_name, last_name, zip_code, bio, private, image_url):
+    def edit(cls, user_id, username, email, first_name, last_name, location, bio, private, image_url):
         """Update user profile info.
         Hashes password and updates user in system.
         """
@@ -85,7 +85,7 @@ class User(db.Model):
         user.email=email
         user.first_name=first_name
         user.last_name=last_name
-        user.zip_code=zip_code
+        user.location=location
         user.bio=bio
         user.private=private
         user.image_url=image_url
@@ -147,8 +147,6 @@ class Follow(db.Model):
     beer_id = db.Column(db.Integer,nullable=True)
     style_id = db.Column(db.Integer,nullable=True)
     created_dt = db.Column(db.DateTime,nullable=False,default=datetime.now())
-    last_updated_dt = db.Column(db.DateTime,nullable=False,default=datetime.now())
-    deleted_dt = db.Column(db.DateTime,nullable=True)
 
 class Checkin(db.Model):
     
@@ -192,27 +190,37 @@ class Checkin(db.Model):
         db.session.commit()
         return checkin
 
-class Toast(db.Model):
+class CheckinToast(db.Model):
     
-    __tablename__ = 'toasts'
+    __tablename__ = 'checkin_toasts'
 
-    toast_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    checkin_toast_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(db.Integer,db.ForeignKey('users.user_id', ondelete='CASCADE'),nullable=False)
     checkin_id = db.Column(db.Integer,db.ForeignKey('checkins.checkin_id', ondelete='CASCADE'),nullable=False)
-    created_dt = db.Column(db.DateTime,nullable=False,default=datetime.now())
-    last_updated_dt = db.Column(db.DateTime,nullable=False,default=datetime.now())
-    deleted_dt = db.Column(db.DateTime,nullable=True)
-
-class ToastComment(db.Model):
     
-    __tablename__ = 'toast_comments'
+    @classmethod
+    def add(cls, user_id, checkin_id):
+        toast = CheckinToast(user_id=user_id, checkin_id=checkin_id)
+        
+        db.session.add(toast)
+        return toast
 
-    toast_comment_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    toast_id = db.Column(db.Integer,db.ForeignKey('toasts.toast_id', ondelete='CASCADE'),nullable=False)
+
+class CheckinComment(db.Model):
+    
+    __tablename__ = 'checkin_comments'
+
+    checkin_comment_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.Integer,db.ForeignKey('users.user_id', ondelete='CASCADE'),nullable=False)
+    checkin_id = db.Column(db.Integer,db.ForeignKey('checkins.checkin_id', ondelete='CASCADE'),nullable=False)
     comments = db.Column(db.Text,nullable=True)
-    created_dt = db.Column(db.DateTime,nullable=False,default=datetime.now())
-    last_updated_dt = db.Column(db.DateTime,nullable=False,default=datetime.now())
-    deleted_dt = db.Column(db.DateTime,nullable=True)
+    
+    @classmethod
+    def add(cls, user_id, checkin_id, comments):
+        comment = CheckinComment(user_id=user_id, checkin_id=checkin_id, comments=comments)
+        
+        db.session.add(comment)
+        return comment
 
 def connect_db(app):
     """Connect this database to provided Flask app.
