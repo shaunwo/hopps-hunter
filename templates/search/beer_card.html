@@ -14,21 +14,19 @@
 		{% endif %} {% if beer.descript|length %}
 		<p class="card-text">{{beer.descript}}</p>
 		{% endif %}
-		<div class="actions">
-			<a href="/beer/checkin/{{beer.id}}" class="btn btn-success"
-				>Check In</a
-			>
-			{% if beer.id not in session['wishlist'] %}
-			<a href="/beer/wishlist/add/{{beer.id}}" class="btn btn-primary"
-				>Add to Wishlist</a
-			>
-			{% else %}
-			<a
-				href="/beer/wishlist/delete/{{beer.id}}"
-				class="btn btn-danger"
-				><strong>DELETE</strong> from Wishlist</a
-			>
-			{% endif %}
-		</div>
+	</div>
+	<div class="card-footer">
+		<a href="/beer/checkin/{{beer.id}}" class="btn btn-success"
+			>Check In</a
+		>
+		{% if beer.id not in session['wishlist'] %}
+		<a href="/beer/wishlist/add/{{beer.id}}" class="btn btn-primary"
+			>Add to Wishlist</a
+		>
+		{% else %}
+		<a href="/beer/wishlist/delete/{{beer.id}}" class="btn btn-danger"
+			><strong>DELETE</strong> from Wishlist</a
+		>
+		{% endif %}
 	</div>
 </div>

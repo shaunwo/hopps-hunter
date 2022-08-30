@@ -56,8 +56,10 @@ class Beer(db.Model):
         return {
             'id': self.id,
             'brewery_id': self.brewery_id,
+            'brewery': self.brewery.name,
             'name': self.name,
             'style_id': self.style_id,
+            'style': self.style.style_name,
             'abv': self.abv,
             'ibu': self.ibu,
             'descript': self.descript

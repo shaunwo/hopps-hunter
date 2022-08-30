@@ -6,8 +6,25 @@ endblock %} {% block content %}
 {% for beer in wishlist %}
 <div class="card">
 	<div class="card-body">
-		<h3 class="card-title">Beer ID: {{ beer.beer_id }}</h3>
-		<p>(Need to tie into the API, yet)</p>
+		<div class="float-md-left">
+			<img
+				src="/static/badge-beer-default.png"
+				alt="Default Beer Badge"
+			/>
+		</div>
+		<h3 class="card-title">{{ beers[beer.beer_id]['name'] }}</h3>
+		<h4 class="card-subtitle">{{ beers[beer.beer_id]['brewery'] }}</h4>
+		<h5>{{ beers[beer.beer_id]['style'] }}</h5>
+		{% if beers[beer.beer_id]['abv'] != 0.0 %}
+		<p>ABV: {{beers[beer.beer_id]['abv']}}</p>
+		{% endif %} {% if beers[beer.beer_id]['descript']|length %}
+		<p class="card-text">{{beers[beer.beer_id]['descript']}}</p>
+		{% endif %}
+	</div>
+	<div class="card-footer">
+		<a href="/activity/beer/{{beer.beer_id}}" class="btn btn-primary"
+			>Recent Checkins</a
+		>
 		<a
 			href="/beer/wishlist/delete/{{beer.beer_id}}"
 			class="btn btn-danger"

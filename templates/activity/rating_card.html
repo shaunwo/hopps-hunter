@@ -1,18 +1,29 @@
 <div class="card">
 	<div class="card-body">
-		Rating: {{rating.rating}}<br />
-		{% if rating.comments|length %} {{rating.comments}}<br />{% endif %}
-		Serving Style: {{rating.serving_size}}<br />
-		{% if rating.purchase_location|length %}Purchased at:
-		{{rating.purchase_location}}<br />{% endif %} rating.user_id:
-		{{rating.user_id}}<br />
-		<div class="text-muted">
-			by {% if rating.user_id != session['curr_user'] %}<a
-				href="/activity/profile/{{rating.user_id}}"
-				title="Follow {{rating.username}}"
-				>{{rating.username}}</a
-			>{% else %}{{rating.user_id}}{% endif %} on
-			{{rating.created_dt.strftime('%A %B %-d, %Y at %I:%M% %p')}}
+		<div class="float-md-left">
+			<img
+				src="/static/badge-beer-default.png"
+				alt="Default Beer Badge"
+			/>
+		</div>
+		<h3 class="card-title">{{ beers[rating.beer_id]['name'] }}</h3>
+		<h4 class="card-subtitle">{{ beers[rating.beer_id]['brewery'] }}</h4>
+		<h5>{{ beers[rating.beer_id]['style'] }}</h5>
+		<div class="rating-info">
+			Rating: {{rating.rating}}<br />
+			{% if rating.comments|length %} {{rating.comments}}<br />{% endif
+			%} Serving Style: {{rating.serving_size}}<br />
+			{% if rating.purchase_location|length %}Purchased at:
+			{{rating.purchase_location}}<br />{% endif %} rating.user_id:
+			{{rating.user_id}}<br />
+			<div class="text-muted">
+				by {% if rating.user_id != session['curr_user'] %}<a
+					href="/activity/profile/{{rating.user_id}}"
+					title="Follow {{rating.username.username}}"
+					>{{rating.username.username}}</a
+				>{% else %}{{rating.username.username}}{% endif %} on
+				{{rating.created_dt.strftime('%A %B %-d, %Y at %I:%M% %p')}}
+			</div>
 		</div>
 	</div>
 	<div class="card-footer">

@@ -6,6 +6,9 @@ from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 from flask_bcrypt import Bcrypt
 from werkzeug.exceptions import Unauthorized
+from pprint import pprint
+
+import json, requests
 
 from models import db, connect_db, User, UserConnection, Checkin, CheckinToast, CheckinComment, Wishlist
 from api_models import Beer, Brewery, Style
@@ -15,6 +18,7 @@ CURR_USER_KEY = "curr_user"
 USER_WISHLIST = "wishlist"
 USER_FOLLOWING = "following"
 USER_FOLLOWERS = "followers"
+BASE_API_URL = 'http://127.0.0.1:5000/api';
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql:///hopps_hunter"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -153,6 +157,36 @@ def activity_page():
         return redirect("/user/login")
     
     form = CheckinCommentsForm()
+
+    # pulling beer IDs for recent checkins
+    activity_beers = (Checkin.query
+                .order_by(Checkin.created_dt.desc())
+                .limit(100)
+                .with_entities(Checkin.beer_id)
+                .all())
+    activity_beer_ids = [id for id, in activity_beers]
+    
+    q_string = ''
+    for beer_id in activity_beer_ids:
+        q_string += "&ids="
+        q_string += beer_id.__str__()
+
+    res = requests.get(f"{BASE_API_URL}/beers?{q_string}")
+    data = res.content
+    data_array = json.loads(data)
+
+    beers = {}
+
+    for beer in data_array['beers']:
+
+        beers[beer['id']] = {
+            'beer_id': beer['id'],
+            'name': beer['name'],
+            'brewery': beer['brewery'],
+            'style': beer['style'],
+            'abv': beer['abv'],
+            'descript': beer['descript']
+        }
     
     # pulling recent checkins
     ratings = (Checkin.query
@@ -160,7 +194,46 @@ def activity_page():
                 .limit(100)
                 .all())
 
-    return render_template('activity/index.html', ratings=ratings, form=form)
+    return render_template('activity/index.html', ratings=ratings, form=form, beers=beers)
+
+
+# displaying the activity on a specific beer
+@app.route('/activity/beer/<int:beer_id>')
+def beer_activity_page(beer_id):
+    
+    # checking to see if the user has signed in
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/user/login")
+    
+    form = CheckinCommentsForm()
+    
+    # pulling single result from the API
+    res = requests.get(f"{BASE_API_URL}/beer/{beer_id}")
+    data = res.content
+    data_array = json.loads(data)
+
+    beers = {}
+    
+    for beer in data_array['beers']:
+
+        beers[beer['id']] = {
+            'beer_id': beer['id'],
+            'name': beer['name'],
+            'brewery': beer['brewery'],
+            'style': beer['style'],
+            'abv': beer['abv'],
+            'descript': beer['descript']
+        }
+    
+    # pulling recent checkins
+    ratings = (Checkin.query
+                .filter(Checkin.beer_id==beer_id)
+                .order_by(Checkin.created_dt.desc())
+                .limit(100)
+                .all())
+
+    return render_template('activity/index.html', form=form, ratings=ratings, beers=beers, beer_id=beer_id)
 
 # displaying the recent activity for ONE user
 @app.route('/activity/<int:user_id>', methods=['GET'])
@@ -174,6 +247,37 @@ def user_activity_page(user_id):
     form = CheckinCommentsForm()
     user = User.query.get_or_404(user_id)
 
+    # pulling beer IDs for recent checkins
+    activity_beers = (Checkin.query
+                .filter(Checkin.user_id==user_id)
+                .order_by(Checkin.created_dt.desc())
+                .limit(100)
+                .with_entities(Checkin.beer_id)
+                .all())
+    activity_beer_ids = [id for id, in activity_beers]
+    
+    q_string = ''
+    for beer_id in activity_beer_ids:
+        q_string += "&ids="
+        q_string += beer_id.__str__()
+
+    res = requests.get(f"{BASE_API_URL}/beers?{q_string}")
+    data = res.content
+    data_array = json.loads(data)
+
+    beers = {}
+
+    for beer in data_array['beers']:
+
+        beers[beer['id']] = {
+            'beer_id': beer['id'],
+            'name': beer['name'],
+            'brewery': beer['brewery'],
+            'style': beer['style'],
+            'abv': beer['abv'],
+            'descript': beer['descript']
+        }
+    
     # pulling recent checkins
     ratings = (Checkin.query
                 .filter(Checkin.user_id==user_id)
@@ -181,7 +285,7 @@ def user_activity_page(user_id):
                 .limit(100)
                 .all())
 
-    return render_template('activity/index.html', ratings=ratings, user=user, form=form)
+    return render_template('activity/index.html', ratings=ratings, user=user, form=form, beers=beers)
 
 # toast someone else's checkin
 @app.route('/activity/toast/<int:checkin_id>', methods=['GET'])
@@ -550,6 +654,37 @@ def mycheckins_page():
         flash("Access unauthorized.", "danger")
         return redirect("/user/login")
     
+    # pulling beer IDs for recent checkins
+    activity_beers = (Checkin.query
+                .filter(Checkin.user_id==session[CURR_USER_KEY])
+                .order_by(Checkin.created_dt.desc())
+                .limit(100)
+                .with_entities(Checkin.beer_id)
+                .all())
+    activity_beer_ids = [id for id, in activity_beers]
+    
+    q_string = ''
+    for beer_id in activity_beer_ids:
+        q_string += "&ids="
+        q_string += beer_id.__str__()
+
+    res = requests.get(f"{BASE_API_URL}/beers?{q_string}")
+    data = res.content
+    data_array = json.loads(data)
+
+    beers = {}
+
+    for beer in data_array['beers']:
+
+        beers[beer['id']] = {
+            'beer_id': beer['id'],
+            'name': beer['name'],
+            'brewery': beer['brewery'],
+            'style': beer['style'],
+            'abv': beer['abv'],
+            'descript': beer['descript']
+        }
+
     # pulling recent checkins
     ratings = (Checkin.query
                 .filter(Checkin.user_id==session[CURR_USER_KEY])
@@ -557,7 +692,7 @@ def mycheckins_page():
                 .limit(100)
                 .all())
 
-    return render_template('profile/checkins.html', ratings=ratings)
+    return render_template('profile/checkins.html', ratings=ratings, beers=beers)
 
 # edit profile checkins
 @app.route('/profile/checkin/edit/<int:checkin_id>', methods=['GET', 'POST'])
@@ -648,10 +783,41 @@ def profile_wishlist():
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/user/login")
-        
+    
+    # pulling beer IDs for wishlist
+    wishlist_beers = (Wishlist.query
+                .filter(Wishlist.user_id == session[CURR_USER_KEY])
+                .order_by(Wishlist.created_dt.desc())
+                .limit(100)
+                .with_entities(Wishlist.beer_id)
+                .all())
+    wishlist_beer_ids = [id for id, in wishlist_beers]
+    
+    q_string = ''
+    for beer_id in wishlist_beer_ids:
+        q_string += "&ids="
+        q_string += beer_id.__str__()
+
+    res = requests.get(f"{BASE_API_URL}/beers?{q_string}")
+    data = res.content
+    data_array = json.loads(data)
+
+    beers = {}
+
+    for beer in data_array['beers']:
+
+        beers[beer['id']] = {
+            'beer_id': beer['id'],
+            'name': beer['name'],
+            'brewery': beer['brewery'],
+            'style': beer['style'],
+            'abv': beer['abv'],
+            'descript': beer['descript']
+        }
+
     wishlist = Wishlist.query.filter(Wishlist.user_id == session[CURR_USER_KEY]).order_by(Wishlist.created_dt.desc()).all()
 
-    return render_template('/profile/wishlist.html', wishlist=wishlist)
+    return render_template('/profile/wishlist.html', wishlist=wishlist, beers=beers)
 
 # displaying the change password screens / functionality
 @app.route('/profile/changepw', methods=['GET', 'POST'])
@@ -753,10 +919,9 @@ def api_beer_search_by_string():
 @app.route('/api/beer/<int:beer_id>', methods=['GET', 'POST'])
 def api_beer_by_id(beer_id):
     beer = Beer.query.get_or_404(beer_id)
-    flash(f"beer: {beer}", "success")
-    return render_template('api/beers/index.html')
-    #return jsonify(beer=beer.serialize())
-
+    beer_results = [beer.serialize()]
+    return jsonify(beers=beer_results)
+    
 @app.route('/api/beers', methods=['GET', 'POST'])
 def api_beers_by_ids():
     ids = request.args.getlist('ids', type=int)
@@ -764,9 +929,6 @@ def api_beers_by_ids():
     # http://127.0.0.1:5000/api/beers?ids=5737&ids=3985&ids=8&ids=304&ids=316
     beer_results = [beers.serialize() for beers in Beer.query.filter(Beer.id.in_(ids)).all()]
     return jsonify(beers=beer_results)
-    #flash(f"beer_results: {beer_results}", "success")
-    #return render_template('api/beers/index.html')
-
 
 @app.route('/api/brewery/showall')
 def api_brewery_showall():

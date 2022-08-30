@@ -11,9 +11,15 @@ endblock %} {% block content %}
 	}
 </script>
 
-<h1>Recent Activity{% if user %} by {{user.username}}{% endif %}</h1>
+<h1>
+	Recent Activity{% if user %} by {{user.username}}{% elif beer_id %} for
+	{{beers[beer_id]['name']}}{% endif %}
+</h1>
 
-{% if ratings %} {% if ratings|length == 0 %}
-<h2>Sorry, no recent activity. Do some of your own checkins, today!</h2>
+{% if ratings|length == 0 %}
+<h2>
+	Sorry, no recent activity{% if user %} by {{user.username}}{% endif %}.{%
+	if user is none %} Do some of your own checkins, today!{% endif %}
+</h2>
 {% else %} {% for rating in ratings %} {% include 'activity/rating_card.html' %}
-{% endfor %} {% endif %} {% endif %}{% endblock %}
+{% endfor %} {% endif %}{% endblock %}
