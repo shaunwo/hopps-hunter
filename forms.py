@@ -58,7 +58,6 @@ class EditProfileForm(FlaskForm):
     last_name = StringField('Last Name', validators=[DataRequired()])
     location = StringField('Location')
     bio = TextAreaField('Bio', validators=[DataRequired()])
-    private = BooleanField('Private?', validators=[Optional()])
     image_url = StringField('Image', validators=[DataRequired()])
 
 class ChangePWForm(FlaskForm):

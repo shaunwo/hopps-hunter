@@ -177,6 +177,7 @@ def activity_page():
 
     beers = {}
 
+    # creating an array of beers from the API data
     for beer in data_array['beers']:
 
         beers[beer['id']] = {
@@ -188,13 +189,40 @@ def activity_page():
             'descript': beer['descript']
         }
     
+    # creating an list of checkin ids to create tuples of toasts and comments
+    checkins = (Checkin.query
+                .order_by(Checkin.created_dt.desc())
+                .limit(100)
+                .with_entities(Checkin.checkin_id)
+                .all())
+    checkin_ids = [id for id, in checkins]
+    
+    # creating tuple of toasts
+    checkin_toasts = [toasts.serialize() for toasts in CheckinToast.query.filter(CheckinToast.checkin_id.in_(checkin_ids)).all()]
+    toasts= {}
+    for toast in checkin_toasts:
+        toasts[toast['checkin_id']] = toasts.get(toast['checkin_id'], ()) + ({
+            'user_id': toast['user_id'],
+            'username': toast['username']
+        },)
+
+    # creating tuple of comments
+    checkin_comments = [comments.serialize() for comments in CheckinComment.query.filter(CheckinComment.checkin_id.in_(checkin_ids)).all()]
+    comments= {}
+    for comment in checkin_comments:
+        comments[comment['checkin_id']] = comments.get(comment['checkin_id'], ()) + ({
+            'user_id': comment['user_id'],
+            'username': comment['username'],
+            'comments': comment['comments']
+        },)
+    
     # pulling recent checkins
     ratings = (Checkin.query
                 .order_by(Checkin.created_dt.desc())
                 .limit(100)
                 .all())
-
-    return render_template('activity/index.html', ratings=ratings, form=form, beers=beers)
+ 
+    return render_template('activity/index.html', ratings=ratings, form=form, beers=beers, toasts=toasts, comments=comments)
 
 
 # displaying the activity on a specific beer

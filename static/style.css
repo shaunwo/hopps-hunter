@@ -38,3 +38,10 @@ h2 {
 	font-style: italic;
 	font-size: 90%;
 }
+.toasts-and-comments {
+	margin-top: 10px;
+}
+.rating-info p {
+	margin-top: 10px;
+	margin-bottom: 0;
+}

@@ -19,13 +19,44 @@
 			<div class="text-muted">
 				by {% if rating.user_id != session['curr_user'] %}<a
 					href="/activity/profile/{{rating.user_id}}"
-					title="Follow {{rating.username.username}}"
-					>{{rating.username.username}}</a
-				>{% else %}{{rating.username.username}}{% endif %} on
+					title="Follow {{rating.user.username}}"
+					>{{rating.user.username}}</a
+				>{% else %}{{rating.user.username}}{% endif %} on
 				{{rating.created_dt.strftime('%A %B %-d, %Y at %I:%M% %p')}}
 			</div>
+
+			<!-- Toasts and Comments -->
+			{% if toasts[rating.checkin_id] or comments[rating.checkin_id] %}
+			<h4 class="toasts-and-comments">Toasts & Comments</h4>
+			{% if toasts[rating.checkin_id] %}
+			<p>Length: {{toasts[rating.checkin_id]|length}}</p>
+			<p>
+				{% for toaster in toasts[rating.checkin_id] %}<strong
+					>{% if toaster['user_id'] != session['curr_user'] %}<a
+						href="/activity/profile/{{toaster['user_id']}}"
+						title="Follow {{toaster['username']}}"
+						>{{toaster['username']}}</a
+					>
+					{% else %}{{toaster['username']}} {% endif %}</strong
+				>{% endfor %} toasted this
+			</p>
+			{% endif %}{% if comments[rating.checkin_id] %}{% for comment in
+			comments[rating.checkin_id] %}
+			<p>
+				<strong
+					>{% if comment['user_id'] != session['curr_user'] %}<a
+						href="/activity/profile/{{comment['user_id']}}"
+						title="Follow {{comment['username']}}"
+						>{{comment['username']}}</a
+					>
+					{% else %}{{comment['username']}} {% endif %}</strong
+				><br />
+				{{comment['comments']}}
+			</p>
+			{% endfor %} {% endif %} {% endif %}
 		</div>
 	</div>
+
 	<div class="card-footer">
 		{% if rating.user_id == session['curr_user'] %}
 		<a

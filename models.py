@@ -41,7 +41,6 @@ class User(db.Model):
     last_name = db.Column(db.Text)
     location = db.Column(db.Text)
     bio = db.Column(db.Text)
-    private = db.Column(db.Boolean)
     image_url = db.Column(db.Text,default="/static/images/default-pic.png")
     created_dt = db.Column(db.DateTime,nullable=False,default=datetime.now())
     last_updated_dt = db.Column(db.DateTime,nullable=False,default=datetime.now())
@@ -166,7 +165,7 @@ class Checkin(db.Model):
     last_updated_dt = db.Column(db.DateTime,nullable=False,default=datetime.now())
     deleted_dt = db.Column(db.DateTime,nullable=True)
 
-    username = db.relationship("User", primaryjoin="Checkin.user_id == User.user_id")
+    user = db.relationship("User", primaryjoin="Checkin.user_id == User.user_id")
 
     @classmethod
     def add(cls, user_id, beer_id, brewery_id, style_id, comments, serving_size, purchase_location, rating, image_url):
@@ -198,6 +197,8 @@ class CheckinToast(db.Model):
     user_id = db.Column(db.Integer,db.ForeignKey('users.user_id', ondelete='CASCADE'),nullable=False)
     checkin_id = db.Column(db.Integer,db.ForeignKey('checkins.checkin_id', ondelete='CASCADE'),nullable=False)
     
+    user = db.relationship("User", primaryjoin="CheckinToast.user_id == User.user_id")
+
     @classmethod
     def add(cls, user_id, checkin_id):
         toast = CheckinToast(user_id=user_id, checkin_id=checkin_id)
@@ -205,6 +206,16 @@ class CheckinToast(db.Model):
         db.session.add(toast)
         return toast
 
+    def serialize(self):
+        
+        """Returns a dict representation of checkin toast which we can turn into JSON"""
+        
+        return {
+            'checkin_toast_id': self.checkin_toast_id,
+            'user_id': self.user_id,
+            'username': self.user.username,
+            'checkin_id': self.checkin_id
+        }
 
 class CheckinComment(db.Model):
     
@@ -215,12 +226,27 @@ class CheckinComment(db.Model):
     checkin_id = db.Column(db.Integer,db.ForeignKey('checkins.checkin_id', ondelete='CASCADE'),nullable=False)
     comments = db.Column(db.Text,nullable=True)
     
+    user = db.relationship("User", primaryjoin="CheckinComment.user_id == User.user_id")
+    
     @classmethod
     def add(cls, user_id, checkin_id, comments):
         comment = CheckinComment(user_id=user_id, checkin_id=checkin_id, comments=comments)
         
         db.session.add(comment)
         return comment
+    
+    def serialize(self):
+        
+        """Returns a dict representation of checkin toast which we can turn into JSON"""
+        
+        return {
+            'checkin_comment_id': self.checkin_comment_id,
+            'user_id': self.user_id,
+            'username': self.user.username,
+            'checkin_id': self.checkin_id,
+            'comments': self.comments
+        }
+
 
 def connect_db(app):
     """Connect this database to provided Flask app.
