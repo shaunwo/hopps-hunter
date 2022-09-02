@@ -29,15 +29,15 @@
 			{% if toasts[rating.checkin_id] or comments[rating.checkin_id] %}
 			<h4 class="toasts-and-comments">Toasts & Comments</h4>
 			{% if toasts[rating.checkin_id] %}
-			<p>Length: {{toasts[rating.checkin_id]|length}}</p>
 			<p>
-				{% for toaster in toasts[rating.checkin_id] %}<strong
+				{% for toaster in toasts[rating.checkin_id] %}{% if
+				loop.index > 1 %}, {% endif %}<strong
 					>{% if toaster['user_id'] != session['curr_user'] %}<a
 						href="/activity/profile/{{toaster['user_id']}}"
 						title="Follow {{toaster['username']}}"
 						>{{toaster['username']}}</a
 					>
-					{% else %}{{toaster['username']}} {% endif %}</strong
+					{% else %}{{toaster['username']}}{% endif %}</strong
 				>{% endfor %} toasted this
 			</p>
 			{% endif %}{% if comments[rating.checkin_id] %}{% for comment in
