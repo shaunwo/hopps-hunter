@@ -14,8 +14,7 @@
 			{% if rating.comments|length %} {{rating.comments}}<br />{% endif
 			%} Serving Style: {{rating.serving_size}}<br />
 			{% if rating.purchase_location|length %}Purchased at:
-			{{rating.purchase_location}}<br />{% endif %} rating.user_id:
-			{{rating.user_id}}<br />
+			{{rating.purchase_location}}<br />{% endif %}
 			<div class="text-muted">
 				by {% if rating.user_id != session['curr_user'] %}<a
 					href="/activity/profile/{{rating.user_id}}"

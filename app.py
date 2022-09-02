@@ -6,9 +6,14 @@ from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 from flask_bcrypt import Bcrypt
 from werkzeug.exceptions import Unauthorized
-from pprint import pprint
+from werkzeug.utils import secure_filename
 
-import json, requests
+import json, requests, boto3, os
+from os import getenv
+
+s3 = boto3.client('s3', aws_access_key_id=os.getenv('AWS_ACCESS_KEY'), aws_secret_access_key= os.getenv('AWS_SECRET_ACCESS_KEY'))
+
+BUCKET_NAME='hopps-hunter'
 
 from models import db, connect_db, User, UserConnection, Checkin, CheckinToast, CheckinComment, Wishlist
 from api_models import Beer, Brewery, Style
@@ -580,6 +585,19 @@ def checkin_beer(beer_id):
         as_file
         """ 
     if form.validate_on_submit():
+
+        # uploading the image to AWS
+        img = request.files['image_url']
+        if img:
+                filename = secure_filename(img.filename)
+                img.save(filename)
+                s3.upload_file(
+                    Bucket = BUCKET_NAME,
+                    Filename=filename,
+                    Key = 'checkin/' + filename
+                )
+                os.remove(filename)
+
         try:
             checkin = Checkin.add(
                 user_id=session[CURR_USER_KEY],
@@ -590,7 +608,7 @@ def checkin_beer(beer_id):
                 serving_size = form.serving_size.data,
                 purchase_location = form.purchase_location.data,
                 rating = form.rating.data,
-                image_url = form.image_url.data,
+                image_url = filename,
             )
             db.session.commit()
 
@@ -713,6 +731,33 @@ def mycheckins_page():
             'descript': beer['descript']
         }
 
+    # creating an list of checkin ids to create tuples of toasts and comments
+    checkins = (Checkin.query
+                .order_by(Checkin.created_dt.desc())
+                .limit(100)
+                .with_entities(Checkin.checkin_id)
+                .all())
+    checkin_ids = [id for id, in checkins]
+    
+    # creating tuple of toasts
+    checkin_toasts = [toasts.serialize() for toasts in CheckinToast.query.filter(CheckinToast.checkin_id.in_(checkin_ids)).all()]
+    toasts= {}
+    for toast in checkin_toasts:
+        toasts[toast['checkin_id']] = toasts.get(toast['checkin_id'], ()) + ({
+            'user_id': toast['user_id'],
+            'username': toast['username']
+        },)
+
+    # creating tuple of comments
+    checkin_comments = [comments.serialize() for comments in CheckinComment.query.filter(CheckinComment.checkin_id.in_(checkin_ids)).all()]
+    comments= {}
+    for comment in checkin_comments:
+        comments[comment['checkin_id']] = comments.get(comment['checkin_id'], ()) + ({
+            'user_id': comment['user_id'],
+            'username': comment['username'],
+            'comments': comment['comments']
+        },)
+
     # pulling recent checkins
     ratings = (Checkin.query
                 .filter(Checkin.user_id==session[CURR_USER_KEY])
@@ -720,7 +765,7 @@ def mycheckins_page():
                 .limit(100)
                 .all())
 
-    return render_template('profile/checkins.html', ratings=ratings, beers=beers)
+    return render_template('profile/checkins.html', ratings=ratings, beers=beers, toasts=toasts, comments=comments)
 
 # edit profile checkins
 @app.route('/profile/checkin/edit/<int:checkin_id>', methods=['GET', 'POST'])
@@ -737,6 +782,19 @@ def edit_checkin_page(checkin_id):
     beer = Beer.query.get_or_404(checkin.beer_id)
 
     if form.validate_on_submit():
+
+       # uploading the image to AWS
+        img = request.files['image_url']
+        if img:
+                filename = secure_filename(img.filename)
+                img.save(filename)
+                s3.upload_file(
+                    Bucket = BUCKET_NAME,
+                    Filename=filename,
+                    Key = 'checkin/' + filename
+                )
+                os.remove(filename)
+
         try:
             checkin = Checkin.edit(
                 checkin_id=checkin_id,
@@ -744,7 +802,7 @@ def edit_checkin_page(checkin_id):
                 serving_size=form.serving_size.data,
                 purchase_location=form.purchase_location.data,
                 rating=form.rating.data,
-                image_url=form.image_url.data,
+                image_url=filename,
             )
 
         except IntegrityError as error:

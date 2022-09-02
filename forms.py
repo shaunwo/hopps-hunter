@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, TextAreaField, SelectField, BooleanField, RadioField
+from wtforms import StringField, PasswordField, TextAreaField, SelectField, FileField
 from wtforms.validators import DataRequired, Email, Length, Optional
 
 ##################################################
@@ -37,7 +37,7 @@ class BeerCheckinForm(FlaskForm):
     purchase_location = StringField('Purchase Location')
     RATING_CHOICES = ['0.0','0.5','1.0','1.5','2.0','2.5','3.0','3.5','4.0','4.5','5.0']
     rating = SelectField(u'Rating', choices=RATING_CHOICES )
-    image_url = StringField('Image')
+    image_url = FileField('Image')
 
 class CheckinCommentsForm(FlaskForm):
     """Checkin comments form"""
@@ -58,7 +58,7 @@ class EditProfileForm(FlaskForm):
     last_name = StringField('Last Name', validators=[DataRequired()])
     location = StringField('Location')
     bio = TextAreaField('Bio', validators=[DataRequired()])
-    image_url = StringField('Image', validators=[DataRequired()])
+    image_url = FileField('Image')
 
 class ChangePWForm(FlaskForm):
     """Form for changing the PW for a user's account"""
