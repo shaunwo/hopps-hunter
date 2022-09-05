@@ -24,12 +24,12 @@ CURR_USER_KEY = "curr_user"
 USER_WISHLIST = "wishlist"
 USER_FOLLOWING = "following"
 USER_FOLLOWERS = "followers"
-BASE_API_URL = 'http://127.0.0.1:5000/api';
+BASE_API_URL = os.environ.get('BASE_API_URL','http://127.0.0.1:5000/api')
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql:///hopps_hunter"
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get('DATABASE_URL', 'postgresql:///hopps_hunter')
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config['SQLALCHEMY_ECHO'] = True
-app.config["SECRET_KEY"] = "noneofyourbusiness"
+app.config["SECRET_KEY"] = os.environ.get('SECRET_KEY', 'noneofyourbusiness')
 app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
 
 toolbar = DebugToolbarExtension(app)
