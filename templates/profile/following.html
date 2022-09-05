@@ -3,5 +3,16 @@
 
 <h1>Following</h1>
 
-{% for user in users %} {% include 'profile/following_card.html' %} {% endfor %}
-{% endblock %}
+{% if pending_users|length == 0 and approved_users|length == 0 %}
+<p>
+	You're not following anyone, yet. Check out the the
+	<a href="/activity" title="Activity">Activity</a> screen to see what's
+	happening.
+</p>
+{% endif %} {% if pending_users|length > 0 %}
+<h2>Pending Approval</h2>
+{% for user in pending_users %} {% include 'profile/pending_following_card.html'
+%} {% endfor %} {% endif %} {% if approved_users|length > 0 %}
+<h2>Approved Followings</h2>
+{% for user in approved_users %} {% include 'profile/following_card.html' %} {%
+endfor %} {% endif %} {% endblock %}

@@ -1,12 +1,39 @@
 {% extends 'base.html' %} {% block title %}Hopps Hunter | Profile{% endblock %}
 {% block content %}
 
-<h1>Profile</h1>
+<h1>My Profile</h1>
 
-<p><a href="/profile/changepw">Change Password</a></p>
-<p><a href="/profile/edit">Edit Profile</a></p>
-<p><a href="/profile/following">Following</a></p>
-<p><a href="/profile/checkins">My Checkins</a></p>
-<p><a href="/profile/wishlist">Wishlist</a></p>
+{% if profile.image_url|length %}
+<div class="float-md-left">
+	<img
+		src="https://hopps-hunter.s3.us-east-2.amazonaws.com/profile/{{profile.image_url}}"
+		alt="{{profile.username}}"
+		width="200"
+	/>
+</div>
+{% endif %}
+<h2>{{profile.first_name}} {{profile.last_name}}</h2>
+<p>
+	Location: {{profile.location}}<br />
+	{{profile.bio}}
+</p>
+<p>
+	<strong>Number of Checkins</strong>: TBD<br />
+	<strong>Follows</strong>: TBD<br />
+	<strong>Followings</strong>: TBD<br />
+</p>
+
+<h3 class="profile-account-heading">Account</h3>
+<ul>
+	<li><a href="/profile/changepw">Change Password</a></li>
+	<li><a href="/profile/edit">Edit Profile</a></li>
+</ul>
+
+<h3>Activity</h3>
+<ul>
+	<li><a href="/profile/following">Following</a></li>
+	<li><a href="/profile/checkins">My Checkins</a></li>
+	<li><a href="/profile/wishlist">Wishlist</a></li>
+</ul>
 
 {% endblock %}

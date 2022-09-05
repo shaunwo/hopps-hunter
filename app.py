@@ -1,4 +1,5 @@
 from ast import MatchSequence
+from curses.ascii import NUL
 from importlib.resources import as_file
 from pickle import FALSE
 from flask import Flask, render_template, redirect, request, session, flash, g, Markup, jsonify
@@ -8,7 +9,7 @@ from flask_bcrypt import Bcrypt
 from werkzeug.exceptions import Unauthorized
 from werkzeug.utils import secure_filename
 
-import json, requests, boto3, os
+import json, requests, boto3, os, mimetypes
 from os import getenv
 
 s3 = boto3.client('s3', aws_access_key_id=os.getenv('AWS_ACCESS_KEY'), aws_secret_access_key= os.getenv('AWS_SECRET_ACCESS_KEY'))
@@ -61,16 +62,16 @@ def do_login(user):
     session[CURR_USER_KEY] = user.user_id
 
     # adding items on user's wishlist to session
-    wishlist_ids = Wishlist.query.filter(Wishlist.user_id == session[CURR_USER_KEY]).with_entities(Wishlist.beer_id).order_by(Wishlist.created_dt.desc()).all()
+    wishlist_ids = Wishlist.query.filter(Wishlist.user_id == session[CURR_USER_KEY], Wishlist.deleted_dt == None).with_entities(Wishlist.beer_id).order_by(Wishlist.created_dt.desc()).all()
     session[USER_WISHLIST] = [id for id, in wishlist_ids]
     
     # adding user's following to session
-    following_ids = UserConnection.query.filter(UserConnection.connector_user_id == session[CURR_USER_KEY]).with_entities(UserConnection.connectee_user_id).order_by(UserConnection.created_dt.desc()).all()
+    following_ids = UserConnection.query.filter(UserConnection.connector_user_id == session[CURR_USER_KEY], UserConnection.approved_dt != None).with_entities(UserConnection.connectee_user_id).order_by(UserConnection.created_dt.desc()).all()
     session[USER_FOLLOWING] = [id for id, in following_ids]
 
     # adding user's followers to session
-    followers_ids = UserConnection.query.filter(UserConnection.connectee_user_id == session[CURR_USER_KEY]).with_entities(UserConnection.connector_user_id).order_by(UserConnection.created_dt.desc()).all()
-    session[USER_FOLLOWERS] = [id for id, in following_ids]
+    followers_ids = UserConnection.query.filter(UserConnection.connectee_user_id == session[CURR_USER_KEY], UserConnection.approved_dt != None).with_entities(UserConnection.connector_user_id).order_by(UserConnection.created_dt.desc()).all()
+    session[USER_FOLLOWERS] = [id for id, in followers_ids]
 
 def do_logout():
     """Logout user."""
@@ -165,6 +166,7 @@ def activity_page():
 
     # pulling beer IDs for recent checkins
     activity_beers = (Checkin.query
+                .filter(Checkin.deleted_dt==None)
                 .order_by(Checkin.created_dt.desc())
                 .limit(100)
                 .with_entities(Checkin.beer_id)
@@ -196,6 +198,7 @@ def activity_page():
     
     # creating an list of checkin ids to create tuples of toasts and comments
     checkins = (Checkin.query
+                .filter(Checkin.deleted_dt==None)
                 .order_by(Checkin.created_dt.desc())
                 .limit(100)
                 .with_entities(Checkin.checkin_id)
@@ -223,6 +226,7 @@ def activity_page():
     
     # pulling recent checkins
     ratings = (Checkin.query
+                .filter(Checkin.deleted_dt==None)
                 .order_by(Checkin.created_dt.desc())
                 .limit(100)
                 .all())
@@ -259,14 +263,42 @@ def beer_activity_page(beer_id):
             'descript': beer['descript']
         }
     
+    # creating an list of checkin ids to create tuples of toasts and comments
+    checkins = (Checkin.query
+                .filter(Checkin.beer_id==beer_id, Checkin.deleted_dt==None)
+                .order_by(Checkin.created_dt.desc())
+                .limit(100)
+                .with_entities(Checkin.checkin_id)
+                .all())
+    checkin_ids = [id for id, in checkins]
+    
+    # creating tuple of toasts
+    checkin_toasts = [toasts.serialize() for toasts in CheckinToast.query.filter(CheckinToast.checkin_id.in_(checkin_ids)).all()]
+    toasts= {}
+    for toast in checkin_toasts:
+        toasts[toast['checkin_id']] = toasts.get(toast['checkin_id'], ()) + ({
+            'user_id': toast['user_id'],
+            'username': toast['username']
+        },)
+
+    # creating tuple of comments
+    checkin_comments = [comments.serialize() for comments in CheckinComment.query.filter(CheckinComment.checkin_id.in_(checkin_ids)).all()]
+    comments= {}
+    for comment in checkin_comments:
+        comments[comment['checkin_id']] = comments.get(comment['checkin_id'], ()) + ({
+            'user_id': comment['user_id'],
+            'username': comment['username'],
+            'comments': comment['comments']
+        },)
+
     # pulling recent checkins
     ratings = (Checkin.query
-                .filter(Checkin.beer_id==beer_id)
+                .filter(Checkin.beer_id==beer_id, Checkin.deleted_dt==None)
                 .order_by(Checkin.created_dt.desc())
                 .limit(100)
                 .all())
 
-    return render_template('activity/index.html', form=form, ratings=ratings, beers=beers, beer_id=beer_id)
+    return render_template('activity/index.html', form=form, ratings=ratings, beers=beers, beer_id=beer_id, toasts=toasts, comments=comments)
 
 # displaying the recent activity for ONE user
 @app.route('/activity/<int:user_id>', methods=['GET'])
@@ -282,7 +314,7 @@ def user_activity_page(user_id):
 
     # pulling beer IDs for recent checkins
     activity_beers = (Checkin.query
-                .filter(Checkin.user_id==user_id)
+                .filter(Checkin.user_id==user_id, Checkin.deleted_dt==None)
                 .order_by(Checkin.created_dt.desc())
                 .limit(100)
                 .with_entities(Checkin.beer_id)
@@ -310,15 +342,43 @@ def user_activity_page(user_id):
             'abv': beer['abv'],
             'descript': beer['descript']
         }
+
+    # creating an list of checkin ids to create tuples of toasts and comments
+    checkins = (Checkin.query
+                .filter(Checkin.user_id==user_id)
+                .order_by(Checkin.created_dt.desc())
+                .limit(100)
+                .with_entities(Checkin.checkin_id)
+                .all())
+    checkin_ids = [id for id, in checkins]
     
+    # creating tuple of toasts
+    checkin_toasts = [toasts.serialize() for toasts in CheckinToast.query.filter(CheckinToast.checkin_id.in_(checkin_ids)).all()]
+    toasts= {}
+    for toast in checkin_toasts:
+        toasts[toast['checkin_id']] = toasts.get(toast['checkin_id'], ()) + ({
+            'user_id': toast['user_id'],
+            'username': toast['username']
+        },)
+
+    # creating tuple of comments
+    checkin_comments = [comments.serialize() for comments in CheckinComment.query.filter(CheckinComment.checkin_id.in_(checkin_ids)).all()]
+    comments= {}
+    for comment in checkin_comments:
+        comments[comment['checkin_id']] = comments.get(comment['checkin_id'], ()) + ({
+            'user_id': comment['user_id'],
+            'username': comment['username'],
+            'comments': comment['comments']
+        },)
+
     # pulling recent checkins
     ratings = (Checkin.query
-                .filter(Checkin.user_id==user_id)
+                .filter(Checkin.user_id==user_id, Checkin.deleted_dt==None)
                 .order_by(Checkin.created_dt.desc())
                 .limit(100)
                 .all())
 
-    return render_template('activity/index.html', ratings=ratings, user=user, form=form, beers=beers)
+    return render_template('activity/index.html', ratings=ratings, user=user, form=form, beers=beers, toasts=toasts, comments=comments)
 
 # toast someone else's checkin
 @app.route('/activity/toast/<int:checkin_id>', methods=['GET'])
@@ -467,18 +527,29 @@ def followers_page():
         flash("Access unauthorized.", "danger")
         return redirect("/user/login")
     
-    # pulling follow requests
-    followers = (UserConnection.query
-                .filter(UserConnection.connectee_user_id==session[CURR_USER_KEY])
+    # pulling pending follow requests
+    pending_followers = (UserConnection.query
+                .filter(UserConnection.connectee_user_id==session[CURR_USER_KEY], UserConnection.approved_dt == None)
                 .with_entities(UserConnection.connector_user_id)
                 .order_by(UserConnection.created_dt.desc())
                 .all())
-    followers_ids = [id for id, in followers]
+    pending_followers_ids = [id for id, in pending_followers]
     
-    users = (User.query
-            .filter(User.user_id.in_(followers_ids))).all()
+    pending_users = (User.query
+            .filter(User.user_id.in_(pending_followers_ids))).all()
+
+    # pulling approved follow requests
+    approved_followers = (UserConnection.query
+                .filter(UserConnection.connectee_user_id==session[CURR_USER_KEY], UserConnection.approved_dt != None)
+                .with_entities(UserConnection.connector_user_id)
+                .order_by(UserConnection.created_dt.desc())
+                .all())
+    approved_followers_ids = [id for id, in approved_followers]
     
-    return render_template('followers/index.html', users=users)
+    approved_users = (User.query
+            .filter(User.user_id.in_(approved_followers_ids))).all()
+
+    return render_template('followers/index.html', pending_users=pending_users, approved_users=approved_users)
 
 @app.route('/followers/block/<int:connector_user_id>')
 def block_follower(connector_user_id):
@@ -503,6 +574,28 @@ def block_follower(connector_user_id):
     session[USER_FOLLOWERS].remove(connector_user_id)
     flash(f"You have blocked {user.username}.", "success")
     return redirect("/followers")
+
+@app.route('/followers/approve/<int:user_id>')
+def approve_follower(user_id):
+
+    # checking to see if the user has signed in
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/user/login")
+
+    try:
+        connection = UserConnection.approve(
+            connectee_user_id=session['curr_user'],
+            connector_user_id=user_id,
+        )
+
+    except IntegrityError as error:
+        # flash(f"{error}", 'danger')
+        flash("Error saving to the database. Please try again.", 'danger')
+        return redirect('/followers')
+
+    flash(f"Follower approved!", "success")
+    return redirect('/followers')
 
 
 ##############################################################################
@@ -578,7 +671,6 @@ def style_beers(style_id):
 def checkin_beer(beer_id):
     
     beer = Beer.query.get_or_404(beer_id)
-    
     form = BeerCheckinForm()
 
     """ if form.validate_on_submit():
@@ -587,14 +679,17 @@ def checkin_beer(beer_id):
     if form.validate_on_submit():
 
         # uploading the image to AWS
+        filename = None
         img = request.files['image_url']
         if img:
                 filename = secure_filename(img.filename)
                 img.save(filename)
+                content_type = mimetypes.guess_type(filename)[0]
                 s3.upload_file(
                     Bucket = BUCKET_NAME,
                     Filename=filename,
-                    Key = 'checkin/' + filename
+                    Key = 'checkin/' + filename,
+                    ExtraArgs={'ACL': 'public-read', 'ContentType': content_type}
                 )
                 os.remove(filename)
 
@@ -659,8 +754,10 @@ def wishlist_delete_beer(beer_id):
     beer = Beer.query.get_or_404(beer_id)
 
     try:
-        db.session.query(Wishlist).filter(Wishlist.beer_id==beer_id, Wishlist.user_id==session[CURR_USER_KEY]).delete()
-        session[USER_WISHLIST].remove(beer_id)
+        wishlist = Wishlist.delete(
+            user_id=session[CURR_USER_KEY],
+            beer_id=beer_id,
+        )
         db.session.commit()
 
     except IntegrityError as error:
@@ -689,7 +786,9 @@ def profile_page():
         flash("Access unauthorized.", "danger")
         return redirect("/user/login")
     
-    return render_template('profile/index.html')
+    profile = User.query.get_or_404(session[CURR_USER_KEY])
+
+    return render_template('profile/index.html', profile=profile)
 
 # profile checkins
 @app.route('/profile/checkins')
@@ -702,7 +801,7 @@ def mycheckins_page():
     
     # pulling beer IDs for recent checkins
     activity_beers = (Checkin.query
-                .filter(Checkin.user_id==session[CURR_USER_KEY])
+                .filter(Checkin.user_id==session[CURR_USER_KEY], Checkin.deleted_dt==None)
                 .order_by(Checkin.created_dt.desc())
                 .limit(100)
                 .with_entities(Checkin.beer_id)
@@ -760,7 +859,7 @@ def mycheckins_page():
 
     # pulling recent checkins
     ratings = (Checkin.query
-                .filter(Checkin.user_id==session[CURR_USER_KEY])
+                .filter(Checkin.user_id==session[CURR_USER_KEY], Checkin.deleted_dt==None)
                 .order_by(Checkin.created_dt.desc())
                 .limit(100)
                 .all())
@@ -783,15 +882,18 @@ def edit_checkin_page(checkin_id):
 
     if form.validate_on_submit():
 
-       # uploading the image to AWS
+        # uploading the image to AWS
+        filename = checkin.image_url
         img = request.files['image_url']
         if img:
                 filename = secure_filename(img.filename)
                 img.save(filename)
+                content_type = mimetypes.guess_type(filename)[0]
                 s3.upload_file(
                     Bucket = BUCKET_NAME,
                     Filename=filename,
-                    Key = 'checkin/' + filename
+                    Key = 'checkin/' + filename,
+                    ExtraArgs={'ACL': 'public-read', 'ContentType': content_type}
                 )
                 os.remove(filename)
 
@@ -826,7 +928,9 @@ def delete_checkin_page(checkin_id):
         return redirect("/user/login")
     
     try:
-        db.session.query(Checkin).filter(Checkin.checkin_id==checkin_id).delete()
+        checkin = Checkin.delete(
+            checkin_id=checkin_id,
+        )
         db.session.commit()
 
     except IntegrityError as error:
@@ -836,7 +940,6 @@ def delete_checkin_page(checkin_id):
 
     flash(f"Checkin deleted!", "success")
     return redirect('/profile/checkins')
-
 
 # displaying the profile following
 @app.route('/profile/following')
@@ -848,18 +951,48 @@ def following_page():
         return redirect("/user/login")
 
     # pulling follow requests
-    followings = (UserConnection.query
-                .filter(UserConnection.connector_user_id==session[CURR_USER_KEY])
+    pending_followings = (UserConnection.query
+                .filter(UserConnection.connector_user_id==session[CURR_USER_KEY], UserConnection.approved_dt == None)
                 .order_by(UserConnection.created_dt.desc())
                 .with_entities(UserConnection.connectee_user_id)
                 .all())
-    followings_ids = [id for id, in followings]
+    pending_followings_ids = [id for id, in pending_followings]
     
-    users = (User.query
-            .filter(User.user_id.in_(followings_ids))).all()
+    pending_users = (User.query
+            .filter(User.user_id.in_(pending_followings_ids))).all()
     
-    return render_template('profile/following.html', users=users)
+    # pulling follow requests
+    approved_followings = (UserConnection.query
+                .filter(UserConnection.connector_user_id==session[CURR_USER_KEY], UserConnection.approved_dt != None)
+                .order_by(UserConnection.created_dt.desc())
+                .with_entities(UserConnection.connectee_user_id)
+                .all())
+    approved_followings_ids = [id for id, in approved_followings]
+    
+    approved_users = (User.query
+            .filter(User.user_id.in_(approved_followings_ids))).all()
+    
+    return render_template('profile/following.html', approved_users=approved_users, pending_users=pending_users)
 
+@app.route('/profile/following/delete/<int:user_id>', methods=['GET'])
+def delete_following(user_id):
+    
+    # checking to see if the user has signed in
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/user/login")
+    
+    try:
+        db.session.query(UserConnection).filter(UserConnection.connector_user_id==session[CURR_USER_KEY], UserConnection.connectee_user_id==user_id).delete()
+        db.session.commit()
+
+    except IntegrityError as error:
+        # flash(f"{error}", 'danger')
+        flash("Error saving to the database. Please try again.", 'danger')
+        return redirect('/profile/checkins')
+
+    flash(f"Following request deleted!", "success")
+    return redirect('/profile/following')
 
 # displaying the profile wishlist
 @app.route('/profile/wishlist', methods=['GET', 'POST'])
@@ -872,7 +1005,7 @@ def profile_wishlist():
     
     # pulling beer IDs for wishlist
     wishlist_beers = (Wishlist.query
-                .filter(Wishlist.user_id == session[CURR_USER_KEY])
+                .filter(Wishlist.user_id == session[CURR_USER_KEY], Wishlist.deleted_dt == None)
                 .order_by(Wishlist.created_dt.desc())
                 .limit(100)
                 .with_entities(Wishlist.beer_id)
@@ -901,7 +1034,7 @@ def profile_wishlist():
             'descript': beer['descript']
         }
 
-    wishlist = Wishlist.query.filter(Wishlist.user_id == session[CURR_USER_KEY]).order_by(Wishlist.created_dt.desc()).all()
+    wishlist = Wishlist.query.filter(Wishlist.user_id == session[CURR_USER_KEY], Wishlist.deleted_dt == None).order_by(Wishlist.created_dt.desc()).all()
 
     return render_template('/profile/wishlist.html', wishlist=wishlist, beers=beers)
 
@@ -958,6 +1091,22 @@ def profile_edit():
     form = EditProfileForm(obj=profile)
 
     if form.validate_on_submit():
+        
+        # uploading the image to AWS
+        filename = profile.image_url
+        img = request.files['image_url']
+        if img:
+                filename = secure_filename(img.filename)
+                img.save(filename)
+                content_type = mimetypes.guess_type(filename)[0]
+                s3.upload_file(
+                    Bucket = BUCKET_NAME,
+                    Filename=filename,
+                    Key = 'profile/' + filename,
+                    ExtraArgs={'ACL': 'public-read', 'ContentType': content_type}
+                )
+                os.remove(filename)
+        
         try:
             profile = User.edit(
                 user_id=session[CURR_USER_KEY],
@@ -967,8 +1116,7 @@ def profile_edit():
                 last_name=form.last_name.data,
                 location=form.location.data,
                 bio=form.bio.data,
-                private=form.private.data,
-                image_url=form.image_url.data,
+                image_url=filename,
             )
 
         except IntegrityError as error:
@@ -977,7 +1125,7 @@ def profile_edit():
             return render_template('/profile/edit.html')
 
         flash(f"Profile updated!", "success")
-        return redirect('/profile/edit')
+        return redirect('/profile')
 
     else:
         return render_template('/profile/edit.html', form=form)

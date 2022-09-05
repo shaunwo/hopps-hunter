@@ -2,13 +2,27 @@
 {{profile.username}}{% endblock %} {% block content %}
 
 <h1>Profile for {{profile.username}}</h1>
-<p>{{profile.bio}}</p>
+{% if profile.image_url|length %}
+<div class="float-md-left">
+	<img
+		src="https://hopps-hunter.s3.us-east-2.amazonaws.com/profile/{{profile.image_url}}"
+		alt="{{profile.username}}"
+		width="200"
+	/>
+</div>
+{% endif %}
+<h2>{{profile.first_name}} {{profile.last_name}}</h2>
+<p>
+	Location: {{profile.location}}<br />
+	{{profile.bio}}
+</p>
 <p>
 	<strong>Number of Checkins</strong>: TBD<br />
 	<strong>Follows</strong>: TBD<br />
 	<strong>Followings</strong>: TBD<br />
 </p>
-{% if profile.user_id not in session['following'] %}
+{% if profile.user_id != session['curr_user'] %} {% if profile.user_id not in
+session['following'] %}
 <a href="/activity/follow/{{profile.user_id}}" class="btn btn-primary"
 	>Follow</a
 >
@@ -16,4 +30,4 @@
 <a href="/activity/unfollow/{{profile.user_id}}" class="btn btn-danger"
 	><strong>Unfollow</strong></a
 >
-{% endif %} {% endblock %}
+{% endif %}{% endif %}{% endblock %}

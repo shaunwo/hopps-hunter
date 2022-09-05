@@ -23,9 +23,17 @@ class Wishlist(db.Model):
 
     @classmethod
     def add(cls, user_id, beer_id):
+
         wishlist = Wishlist(user_id=user_id, beer_id=beer_id,)
-        
         db.session.add(wishlist)
+        return wishlist
+
+    @classmethod
+    def delete(cls, user_id, beer_id):
+
+        wishlist = cls.query.filter_by(user_id=user_id, beer_id=beer_id).first()
+        wishlist.deleted_dt=datetime.now()
+        db.session.commit()
         return wishlist
 
 
@@ -41,9 +49,9 @@ class User(db.Model):
     last_name = db.Column(db.Text)
     location = db.Column(db.Text)
     bio = db.Column(db.Text)
-    image_url = db.Column(db.Text,default="/static/images/default-pic.png")
+    image_url = db.Column(db.Text)
     created_dt = db.Column(db.DateTime,nullable=False,default=datetime.now())
-    last_updated_dt = db.Column(db.DateTime,nullable=False,default=datetime.now())
+    last_updated_dt = db.Column(db.DateTime,nullable=False)
     deleted_dt = db.Column(db.DateTime,nullable=True)
     
     wishlist = db.relationship(
@@ -75,7 +83,7 @@ class User(db.Model):
         return user
 
     @classmethod
-    def edit(cls, user_id, username, email, first_name, last_name, location, bio, private, image_url):
+    def edit(cls, user_id, username, email, first_name, last_name, location, bio, image_url):
         """Update user profile info.
         Hashes password and updates user in system.
         """
@@ -86,8 +94,8 @@ class User(db.Model):
         user.last_name=last_name
         user.location=location
         user.bio=bio
-        user.private=private
         user.image_url=image_url
+        user.last_updated_dt=datetime.now()
         db.session.commit()
         return user
 
@@ -125,6 +133,18 @@ class UserConnection(db.Model):
         
         db.session.add(follow)
         return follow
+
+    @classmethod
+    def approve(cls, connector_user_id, connectee_user_id):
+        """Update user profile info.
+        Hashes password and updates user in system.
+        """
+        connection = cls.query.filter_by(connector_user_id=connector_user_id, connectee_user_id=connectee_user_id).first()
+        connection.last_updated_dt=datetime.now()
+        connection.approved_dt=datetime.now()
+        db.session.commit()
+        return connection
+
 
 class UserNotification(db.Model):
     
@@ -176,9 +196,6 @@ class Checkin(db.Model):
 
     @classmethod
     def edit(cls, checkin_id, comments, serving_size, purchase_location, rating, image_url):
-        """Update user profile info.
-        Hashes password and updates user in system.
-        """
         checkin = cls.query.filter_by(checkin_id=checkin_id).first()
         checkin.comments=comments
         checkin.serving_size=serving_size
@@ -188,6 +205,14 @@ class Checkin(db.Model):
         checkin.last_updated_dt=datetime.now()
         db.session.commit()
         return checkin
+    
+    @classmethod
+    def delete(cls, checkin_id):
+        checkin = cls.query.filter_by(checkin_id=checkin_id).first()
+        checkin.deleted_dt=datetime.now()
+        db.session.commit()
+        return checkin
+
 
 class CheckinToast(db.Model):
     

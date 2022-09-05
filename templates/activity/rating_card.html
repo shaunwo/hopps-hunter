@@ -1,10 +1,18 @@
 <div class="card">
 	<div class="card-body">
 		<div class="float-md-left">
+			{% if rating.image_url %}
+			<img
+				src="https://hopps-hunter.s3.us-east-2.amazonaws.com/checkin/{{rating.image_url}}"
+				alt="{{beers[rating.beer_id]['name']}}"
+				width="84"
+			/>
+			{% else %}
 			<img
 				src="/static/badge-beer-default.png"
 				alt="Default Beer Badge"
 			/>
+			{% endif %}
 		</div>
 		<h3 class="card-title">{{ beers[rating.beer_id]['name'] }}</h3>
 		<h4 class="card-subtitle">{{ beers[rating.beer_id]['brewery'] }}</h4>
@@ -30,13 +38,16 @@
 			{% if toasts[rating.checkin_id] %}
 			<p>
 				{% for toaster in toasts[rating.checkin_id] %}{% if
-				loop.index > 1 %}, {% endif %}<strong
-					>{% if toaster['user_id'] != session['curr_user'] %}<a
+				loop.index > 1 %}{% if loop.index ==
+				toasts[rating.checkin_id]|length %}and {% else %}, {% endif
+				%}{% endif %}<strong>
+					{% if toaster['user_id'] != session['curr_user'] %}<a
 						href="/activity/profile/{{toaster['user_id']}}"
 						title="Follow {{toaster['username']}}"
 						>{{toaster['username']}}</a
 					>
-					{% else %}{{toaster['username']}}{% endif %}</strong
+					{% else %}{% set toasted = 'YES!'
+					%}{{toaster['username']}}{% endif %}</strong
 				>{% endfor %} toasted this
 			</p>
 			{% endif %}{% if comments[rating.checkin_id] %}{% for comment in
@@ -57,7 +68,7 @@
 	</div>
 
 	<div class="card-footer">
-		{% if rating.user_id == session['curr_user'] %}
+		{{toasted}} {% if rating.user_id == session['curr_user'] %}
 		<a
 			href="/profile/checkin/edit/{{rating.checkin_id}}"
 			class="btn-sm btn-primary"
@@ -68,13 +79,21 @@
 			class="btn-sm btn-danger"
 			>Delete</a
 		>
-		{% else %}
+		{% else %} {% if not toasted %}
 		<a
 			href="/activity/toast/{{rating.checkin_id}}"
 			title="Toast this Checkin"
 			class="btn-sm btn-primary"
 			>Toast</a
 		>
+		{% else %}
+		<a
+			href="/activity/toast/{{rating.checkin_id}}"
+			title="Untoast this Checkin"
+			class="btn-sm btn-primary"
+			><strong>Un</strong>toast</a
+		>
+		{% endif %}
 		<a
 			class="btn-sm btn-success"
 			onclick="toggleShowHide('comments{{rating.checkin_id}}')"

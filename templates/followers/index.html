@@ -3,7 +3,17 @@
 
 <h1>My Followers</h1>
 
-{% if users %} {% if users|length == 0 %}
-<h2>Sorry, no followers, yet.</h2>
-{% else %} {% for user in users %} {% include 'followers/follower_card.html' %}
-{% endfor %} {% endif %} {% endif %}{% endblock %}
+{% if pending_users|length == 0 and approved_users|length == 0 %}
+<p>
+	No one is following you, yet. Check out the the
+	<a href="/activity" title="Activity">Activity</a> screen to see what's
+	happening.
+</p>
+{% endif %} {% if pending_users|length > 0 %}
+<h2>Pending Approval</h2>
+{% for user in pending_users %} {% include
+'followers/pending_follower_card.html' %} {% endfor %} {% endif %} {% if
+approved_users|length > 0 %}
+<h2>Approved Followers</h2>
+{% for user in approved_users %} {% include 'followers/follower_card.html' %} {%
+endfor %} {% endif %} {% endblock %}

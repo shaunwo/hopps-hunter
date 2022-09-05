@@ -3,7 +3,7 @@
 
 <h1>My Profile</h1>
 
-<form method="POST">
+<form method="POST" enctype="multipart/form-data">
 	{{ form.hidden_tag() }} {% for field in form if (field.widget.input_type !=
 	'hidden') %} {{ field(placeholder=field.label.text, class="form-control")
 	}} {% for error in field.errors %}

@@ -31,7 +31,8 @@ h2 {
 	margin: 0 10px 10px 0;
 }
 .card-text,
-.rating-info {
+.rating-info,
+.profile-account-heading {
 	clear: both;
 }
 .text-muted {
