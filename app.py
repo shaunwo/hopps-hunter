@@ -1,7 +1,3 @@
-from ast import MatchSequence
-from curses.ascii import NUL
-from importlib.resources import as_file
-from pickle import FALSE
 from flask import Flask, render_template, redirect, request, session, flash, g, Markup, jsonify
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
@@ -10,7 +6,6 @@ from werkzeug.exceptions import Unauthorized
 from werkzeug.utils import secure_filename
 
 import json, requests, boto3, os, mimetypes
-from os import getenv
 
 s3 = boto3.client('s3', aws_access_key_id=os.getenv('AWS_ACCESS_KEY'), aws_secret_access_key= os.getenv('AWS_SECRET_ACCESS_KEY'))
 
