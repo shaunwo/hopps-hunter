@@ -35,7 +35,8 @@
 			<!-- Toasts and Comments -->
 			{% if toasts[rating.checkin_id] or comments[rating.checkin_id] %}
 			<h4 class="toasts-and-comments">Toasts & Comments</h4>
-			{% if toasts[rating.checkin_id] %}
+			{% set ns = namespace() %} {% if toasts[rating.checkin_id] %} {%
+			set toasted = [] %}
 			<p>
 				{% for toaster in toasts[rating.checkin_id] %}{% if
 				loop.index > 1 %}{% if loop.index ==
@@ -46,7 +47,7 @@
 						title="Follow {{toaster['username']}}"
 						>{{toaster['username']}}</a
 					>
-					{% else %}{% set toasted = 'YES!'
+					{% else %}{% set temp = toasted.append(TRUE)
 					%}{{toaster['username']}}{% endif %}</strong
 				>{% endfor %} toasted this
 			</p>
@@ -68,7 +69,7 @@
 	</div>
 
 	<div class="card-footer">
-		{{toasted}} {% if rating.user_id == session['curr_user'] %}
+		{% if rating.user_id == session['curr_user'] %}
 		<a
 			href="/profile/checkin/edit/{{rating.checkin_id}}"
 			class="btn-sm btn-primary"
@@ -79,21 +80,13 @@
 			class="btn-sm btn-danger"
 			>Delete</a
 		>
-		{% else %} {% if not toasted %}
+		{% else %}
 		<a
 			href="/activity/toast/{{rating.checkin_id}}"
 			title="Toast this Checkin"
 			class="btn-sm btn-primary"
 			>Toast</a
 		>
-		{% else %}
-		<a
-			href="/activity/toast/{{rating.checkin_id}}"
-			title="Untoast this Checkin"
-			class="btn-sm btn-primary"
-			><strong>Un</strong>toast</a
-		>
-		{% endif %}
 		<a
 			class="btn-sm btn-success"
 			onclick="toggleShowHide('comments{{rating.checkin_id}}')"
