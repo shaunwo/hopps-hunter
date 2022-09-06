@@ -459,8 +459,20 @@ def other_profile_page(user_id):
     
     # pulling profile info
     profile = User.query.get_or_404(user_id)
+
+    counts = {}
     
-    return render_template('activity/profile.html', profile=profile)
+    # pulling counts for checkins, follows and following
+    checkins = Checkin.query.filter(Checkin.user_id == user_id, Checkin.deleted_dt == None).with_entities(Checkin.checkin_id).all()
+    counts['checkin'] = len(checkins)
+    
+    following = UserConnection.query.filter(UserConnection.connector_user_id == session[CURR_USER_KEY], UserConnection.approved_dt != None).with_entities(UserConnection.connectee_user_id).all()
+    counts['following'] = len(following)
+
+    followers = UserConnection.query.filter(UserConnection.connectee_user_id == session[CURR_USER_KEY], UserConnection.approved_dt != None).with_entities(UserConnection.connector_user_id).all()
+    counts['followers'] = len(followers)
+    
+    return render_template('activity/profile.html', profile=profile, counts=counts)
 
 # follow someone
 @app.route('/activity/follow/<int:connectee_user_id>', methods=['GET'])

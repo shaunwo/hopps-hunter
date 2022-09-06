@@ -17,9 +17,9 @@
 	{{profile.bio}}
 </p>
 <p>
-	<strong>Number of Checkins</strong>: TBD<br />
-	<strong>Follows</strong>: TBD<br />
-	<strong>Followings</strong>: TBD<br />
+	<strong>Number of Checkins</strong>: {{counts['checkin']}}<br />
+	<strong>Follows</strong>: {{counts['followers']}}<br />
+	<strong>Followings</strong>: {{counts['following']}}<br />
 </p>
 {% if profile.user_id != session['curr_user'] %} {% if profile.user_id not in
 session['following'] %}
