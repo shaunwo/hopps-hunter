@@ -41,8 +41,10 @@ def home_page():
 ##############################################################################
 # BEGIN USER SIGNUP/LOGIN/LOGOUT ROUTES 
 ##############################################################################
+
 @app.before_request
 def add_user_to_g():
+    
     """If user is logged in, add Current User to Flask global."""
 
     if CURR_USER_KEY in session:
@@ -52,7 +54,8 @@ def add_user_to_g():
         g.user = None
 
 def do_login(user):
-    """Log in user."""
+    
+    """Login user"""
 
     session[CURR_USER_KEY] = user.user_id
 
@@ -69,13 +72,14 @@ def do_login(user):
     session[USER_FOLLOWERS] = [id for id, in followers_ids]
 
 def do_logout():
-    """Logout user."""
+    """Logout user"""
 
     if CURR_USER_KEY in session:
         del session[CURR_USER_KEY]
 
 @app.route('/user/signup', methods=['GET', 'POST'])
 def signup():
+    
     """Handle user signup.
 
     Create new user and add to DB. Redirect to home page.
@@ -98,7 +102,6 @@ def signup():
             db.session.commit()
 
         except IntegrityError as error:
-            # flash(f"{error}", 'danger')
             flash("Username already taken", 'danger')
             return render_template('users/signup.html', form=form)
 
@@ -109,10 +112,10 @@ def signup():
     else:
         return render_template('users/signup.html', form=form)
 
-
 @app.route('/user/login', methods=['GET', 'POST'])
 def login():
-    """Handle user login."""
+    
+    """Handle user login"""
 
     form = LoginForm()
 
@@ -129,11 +132,10 @@ def login():
 
     return render_template('users/login.html', form=form)
 
-
 @app.route('/user/logout')
 def logout():
     
-    """Handle logout of user."""
+    """Handle user logout"""
 
     do_logout()
     flash('You have been logged out. But come back soon!', 'success')
@@ -152,6 +154,8 @@ def logout():
 @app.route('/activity')
 def activity_page():
     
+    """Displaying ALL activity on the screen"""
+
     # checking to see if the user has signed in
     if not g.user:
         flash("Access unauthorized.", "danger")
@@ -228,10 +232,11 @@ def activity_page():
  
     return render_template('activity/index.html', ratings=ratings, form=form, beers=beers, toasts=toasts, comments=comments)
 
-
 # displaying the activity on a specific beer
 @app.route('/activity/beer/<int:beer_id>')
 def beer_activity_page(beer_id):
+    
+    """Displaying activity for a particular beer on the screen"""
     
     # checking to see if the user has signed in
     if not g.user:
@@ -298,6 +303,8 @@ def beer_activity_page(beer_id):
 # displaying the recent activity for ONE user
 @app.route('/activity/<int:user_id>', methods=['GET'])
 def user_activity_page(user_id):
+    
+    """Displaying activity for a particular user on the screen"""
     
     # checking to see if the user has signed in
     if not g.user:
@@ -379,6 +386,8 @@ def user_activity_page(user_id):
 @app.route('/activity/toast/<int:checkin_id>', methods=['GET'])
 def checkin_toast(checkin_id):
     
+    """Toasting someone else's checkin"""
+    
     # checking to see if the user has signed in
     if not g.user:
         flash("Access unauthorized.", "danger")
@@ -406,6 +415,8 @@ def checkin_toast(checkin_id):
 # leave a comment on someone else's checkin
 @app.route('/activity/comment/<int:checkin_id>', methods=['POST'])
 def checkin_comment(checkin_id):
+    
+    """Leaving a comment on someone else's checkin"""
     
     # checking to see if the user has signed in
     if not g.user:
@@ -439,6 +450,8 @@ def checkin_comment(checkin_id):
 @app.route('/activity/profile/<int:user_id>', methods=['GET'])
 def other_profile_page(user_id):
 
+    """Displaying a user's profile page with follow and checkin options"""
+    
     # checking to see if the user has signed in
     if not g.user:
         flash("Access unauthorized.", "danger")
@@ -452,6 +465,8 @@ def other_profile_page(user_id):
 # follow someone
 @app.route('/activity/follow/<int:connectee_user_id>', methods=['GET'])
 def follow_user(connectee_user_id):
+    
+    """Setting up a follow in the DB"""
     
     # checking to see if the user has signed in
     if not g.user:
@@ -479,9 +494,11 @@ def follow_user(connectee_user_id):
     
     return redirect(f'/activity/profile/{connectee_user_id}')
 
-# follow someone
+# unfollow someone
 @app.route('/activity/unfollow/<int:connectee_user_id>', methods=['GET'])
 def unfollow_user(connectee_user_id):
+    
+    """Deleting a follow in the DB"""
 
     # checking to see if the user has signed in
     if not g.user:
@@ -517,6 +534,8 @@ def unfollow_user(connectee_user_id):
 @app.route('/followers')
 def followers_page():
 
+    """Displaying a list of the followers on the screen"""
+
     # checking to see if the user has signed in
     if not g.user:
         flash("Access unauthorized.", "danger")
@@ -549,6 +568,8 @@ def followers_page():
 @app.route('/followers/block/<int:connector_user_id>')
 def block_follower(connector_user_id):
     
+    """Block a follower"""
+    
     # checking to see if the user has signed in
     if not g.user:
         flash("Access unauthorized.", "danger")
@@ -573,6 +594,8 @@ def block_follower(connector_user_id):
 @app.route('/followers/approve/<int:user_id>')
 def approve_follower(user_id):
 
+    """Approve a follower"""
+    
     # checking to see if the user has signed in
     if not g.user:
         flash("Access unauthorized.", "danger")
@@ -606,6 +629,8 @@ def approve_follower(user_id):
 @app.route('/search', methods=['GET'])
 def search_page():
 
+    """Displaying the search results on the screen"""
+    
     # checking to see if the user has signed in
     if not g.user:
         flash("Access unauthorized.", "danger")
@@ -640,6 +665,8 @@ def search_page():
 @app.route('/search/brewery/<int:brewery_id>', methods=['GET'])
 def brewery_beers(brewery_id):
     
+    """Displaying the search results from a particular brewery on the screen"""
+    
     brewery = Brewery.query.get_or_404(brewery_id)
     beers = Beer.query.filter(Beer.brewery_id == brewery_id).order_by(Beer.name.asc()).all()
 
@@ -648,6 +675,8 @@ def brewery_beers(brewery_id):
 # show beers from a particular style
 @app.route('/search/style/<int:style_id>', methods=['GET'])
 def style_beers(style_id):
+    
+    """Displaying the search results from a particular style on the screen"""
     
     style = Style.query.get_or_404(style_id)
     beers = Beer.query.filter(Beer.style_id == style_id).order_by(Beer.name.asc()).all()
@@ -665,12 +694,11 @@ def style_beers(style_id):
 @app.route('/beer/checkin/<int:beer_id>', methods=['GET', 'POST'])
 def checkin_beer(beer_id):
     
+    """Saving a checkin to DB / uploading image to S3"""
+
     beer = Beer.query.get_or_404(beer_id)
     form = BeerCheckinForm()
 
-    """ if form.validate_on_submit():
-        as_file
-        """ 
     if form.validate_on_submit():
 
         # uploading the image to AWS
@@ -717,6 +745,8 @@ def checkin_beer(beer_id):
 @app.route('/beer/wishlist/add/<int:beer_id>', methods=['GET'])
 def wishlist_add_beer(beer_id):
     
+    """Saving a beer to the wishlist in the DB"""
+    
     beer = Beer.query.get_or_404(beer_id)
 
     try:
@@ -741,6 +771,8 @@ def wishlist_add_beer(beer_id):
 @app.route('/beer/wishlist/delete/<int:beer_id>', methods=['GET'])
 def wishlist_delete_beer(beer_id):
     
+    """Deleting a beer from the wishlist in the DB"""
+    
     # checking to see if the user has signed in
     if not g.user:
         flash("Access unauthorized.", "danger")
@@ -749,7 +781,7 @@ def wishlist_delete_beer(beer_id):
     beer = Beer.query.get_or_404(beer_id)
 
     try:
-        wishlist = Wishlist.delete(
+        Wishlist.delete(
             user_id=session[CURR_USER_KEY],
             beer_id=beer_id,
         )
@@ -776,6 +808,8 @@ def wishlist_delete_beer(beer_id):
 @app.route('/profile')
 def profile_page():
 
+    """Displaying the profile for the user that is logged in, on the screen"""
+
     # checking to see if the user has signed in
     if not g.user:
         flash("Access unauthorized.", "danger")
@@ -788,7 +822,9 @@ def profile_page():
 # profile checkins
 @app.route('/profile/checkins')
 def mycheckins_page():
-    
+
+    """Displaying the checkins for the user that is logged in, on the screen"""
+
     # checking to see if the user has signed in
     if not g.user:
         flash("Access unauthorized.", "danger")
@@ -865,6 +901,8 @@ def mycheckins_page():
 @app.route('/profile/checkin/edit/<int:checkin_id>', methods=['GET', 'POST'])
 def edit_checkin_page(checkin_id):
     
+    """Editing a checkin for the user that is logged in"""
+    
     # checking to see if the user has signed in
     if not g.user:
         flash("Access unauthorized.", "danger")
@@ -917,13 +955,15 @@ def edit_checkin_page(checkin_id):
 @app.route('/profile/checkin/delete/<int:checkin_id>', methods=['GET'])
 def delete_checkin_page(checkin_id):
     
+    """Deleting a checkin for the user that is logged in"""
+    
     # checking to see if the user has signed in
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/user/login")
     
     try:
-        checkin = Checkin.delete(
+        Checkin.delete(
             checkin_id=checkin_id,
         )
         db.session.commit()
@@ -940,6 +980,8 @@ def delete_checkin_page(checkin_id):
 @app.route('/profile/following')
 def following_page():
 
+    """Displaying the following for the user that is logged in, on the screen"""
+    
     # checking to see if the user has signed in
     if not g.user:
         flash("Access unauthorized.", "danger")
@@ -972,6 +1014,8 @@ def following_page():
 @app.route('/profile/following/delete/<int:user_id>', methods=['GET'])
 def delete_following(user_id):
     
+    """Delete a following for the user that is logged in"""
+    
     # checking to see if the user has signed in
     if not g.user:
         flash("Access unauthorized.", "danger")
@@ -992,6 +1036,8 @@ def delete_following(user_id):
 # displaying the profile wishlist
 @app.route('/profile/wishlist', methods=['GET', 'POST'])
 def profile_wishlist():
+    
+    """Displaying the wishlist for the user that is logged in, on the screen"""
     
     # checking to see if the user has signed in
     if not g.user:
@@ -1037,6 +1083,8 @@ def profile_wishlist():
 @app.route('/profile/changepw', methods=['GET', 'POST'])
 def change_pw():
     
+    """Changing the PW user that is logged in, on the screen"""
+    
     user = User.query.get_or_404(session[CURR_USER_KEY])
     form = ChangePWForm()
 
@@ -1072,16 +1120,9 @@ def change_pw():
 # edit profile screens / functionality
 @app.route('/profile/edit', methods=['GET', 'POST'])
 def profile_edit():
-    """Handle user signup.
-
-    Create new user and add to DB. Redirect to home page.
-
-    If form not valid, present form.
-
-    If the there already is a user with that username: flash message
-    and re-present form.
-    """
-
+   
+    """Edit the profile for the user that is logged in, on the screen"""
+    
     profile = User.query.get_or_404(session[CURR_USER_KEY])
     form = EditProfileForm(obj=profile)
 
@@ -1133,12 +1174,17 @@ def profile_edit():
 # BEGIN API ROUTES
 @app.route('/api/beer/showall')
 def api_beer_showall():
+
+    """API - Pulling ALL beers in DB"""
+
     beers = Beer.query.order_by(Beer.name.asc()).all()
     return render_template('api/beers/index.html', beers=beers)
 
 @app.route('/api/beer/search', methods=['GET', 'POST'])
 def api_beer_search_by_string():
 
+    """API - Pulling beers in DB based on search"""
+    
     search = request.form.get('search')
     beer_results = [beers.serialize() for beers in Beer.query.filter(Beer.name.ilike(f"%{search}%")).order_by(Beer.name.asc()).all()]
     flash(f"beer_results: {beer_results}", "success")
@@ -1147,38 +1193,52 @@ def api_beer_search_by_string():
 
 @app.route('/api/beer/<int:beer_id>', methods=['GET', 'POST'])
 def api_beer_by_id(beer_id):
+
+    """API - Pulling beer details in DB for one particular beer"""
+    
     beer = Beer.query.get_or_404(beer_id)
     beer_results = [beer.serialize()]
     return jsonify(beers=beer_results)
     
 @app.route('/api/beers', methods=['GET', 'POST'])
 def api_beers_by_ids():
+
+    """API - Pulling beers in DB based on multiple ID numbers"""
+    
     ids = request.args.getlist('ids', type=int)
-    # ids = [5737,3985,8]
-    # http://127.0.0.1:5000/api/beers?ids=5737&ids=3985&ids=8&ids=304&ids=316
     beer_results = [beers.serialize() for beers in Beer.query.filter(Beer.id.in_(ids)).all()]
     return jsonify(beers=beer_results)
 
 @app.route('/api/brewery/showall')
 def api_brewery_showall():
+
+    """API - Pulling ALL breweries in DB"""
+    
     breweries = Brewery.query.order_by(Brewery.name.asc()).all()
     return render_template('api/breweries/index.html', breweries=breweries)
 
 @app.route('/api/brewery/search', methods=['GET', 'POST'])
 def api_brewery_search_by_string():
 
+    """API - Pulling breweries in DB based on search"""
+    
     search = request.form.get('search')
     brewery_results = [breweries.serialize() for breweries in Brewery.query.filter(Brewery.name.ilike(f"%{search}%")).order_by(Brewery.name.asc()).all()]
     return jsonify(breweries=brewery_results)
 
 @app.route('/api/style/showall')
 def api_style_showall():
+
+    """API - Pulling ALL styles in DB"""
+    
     styles = Style.query.order_by(Style.style_name.asc()).all()
     return render_template('api/styles/index.html', styles=styles)
 
 @app.route('/api/style/search', methods=['GET', 'POST'])
 def api_syle_search_by_string():
 
+    """API - Pulling styles in DB based on search"""
+    
     search = request.form.get('search')
     style_results = [styles.serialize() for styles in Style.query.filter(Style.style_name.ilike(f"%{search}%")).order_by(Style.style_name.asc()).all()]
     return jsonify(styles=style_results)

@@ -30,4 +30,6 @@ session['following'] %}
 <a href="/activity/unfollow/{{profile.user_id}}" class="btn btn-danger"
 	><strong>Unfollow</strong></a
 >
-{% endif %}{% endif %}{% endblock %}
+{% endif %}
+<a href="/activity/{{profile.user_id}}" class="btn btn-success">Checkins</a>
+{% endif %}{% endblock %}
