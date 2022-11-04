@@ -20,35 +20,14 @@
 	</head>
 	<body>
 		<nav class="navbar navbar-dark bg-dark justify-content-between">
-			<a class="navbar-brand" href="/" class="navbar-brand text-light"
-				><img
-					src="/static/hopps-hunter_logo.png"
-					alt="Hopps Hunter"
-					class="img-responsive"
-			/></a>
+				<a class="navbar-brand" href="/" class="navbar-brand text-light"
+					><img
+						src="/static/hopps-hunter_logo.png"
+						alt="Hopps Hunter"
+						class="img-responsive"
+				/></a>
 
-			<!-- Collapse button -->
-			<button
-				class="navbar-toggler toggler-example"
-				type="button"
-				data-toggle="collapse"
-				data-target="#navbarSupportedContent1"
-				aria-controls="navbarSupportedContent1"
-				aria-expanded="false"
-				aria-label="Toggle navigation"
-			>
-				<span class="dark-blue-text"
-					><i class="fas fa-bars fa-1x"></i
-				></span>
-			</button>
-
-			<!-- Collapsible content -->
-			<div
-				class="collapse navbar-collapse"
-				id="navbarSupportedContent1"
-			>
-				<!-- Links -->
-				<ul class="navbar-nav mr-auto">
+				<ul class="nav navbar-nav flex-row float-right">
 					{% if not g.user %}
 					<li class="nav-item">
 						<a
