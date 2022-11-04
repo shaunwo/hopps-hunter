@@ -19,15 +19,30 @@
 		<link rel="stylesheet" href="/static/style.css" />
 	</head>
 	<body>
-		<nav class="navbar navbar-dark bg-dark justify-content-between">
-				<a class="navbar-brand" href="/" class="navbar-brand text-light"
-					><img
-						src="/static/hopps-hunter_logo.png"
-						alt="Hopps Hunter"
-						class="img-responsive"
-				/></a>
+		<nav
+			class="navbar navbar-expand-lg navbar-dark bg-dark justify-content-between"
+		>
+			<a href="/" class="navbar-brand text-light"
+				><img
+					src="/static/hopps-hunter_logo.png"
+					alt="Hopps Hunter"
+					class="img-responsive"
+			/></a>
 
-				<ul class="nav navbar-nav flex-row float-right">
+			<button
+				class="navbar-toggler"
+				type="button"
+				data-toggle="collapse"
+				data-target="#navbarTogglerDemo02"
+				aria-controls="navbarTogglerDemo02"
+				aria-expanded="false"
+				aria-label="Toggle navigation"
+			>
+				<span class="navbar-toggler-icon"></span>
+			</button>
+
+			<div class="collapse navbar-collapse" id="navbarTogglerDemo02">
+				<ul class="navbar-nav mr-auto mt-2 mt-lg-0">
 					{% if not g.user %}
 					<li class="nav-item">
 						<a
