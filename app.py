@@ -827,9 +827,13 @@ def profile_page():
         flash("Access unauthorized.", "danger")
         return redirect("/user/login")
     
+    wishlistCount = len(session[USER_WISHLIST])
+    followingCount = len(session[USER_FOLLOWING])
+    followersCount = len(session[USER_FOLLOWERS])
+
     profile = User.query.get_or_404(session[CURR_USER_KEY])
 
-    return render_template('profile/index.html', profile=profile)
+    return render_template('profile/index.html', profile=profile, wishlistCount=wishlistCount, followingCount=followingCount, followersCount=followersCount)
 
 # profile checkins
 @app.route('/profile/checkins')
