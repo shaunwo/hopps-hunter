@@ -1,4 +1,5 @@
-# Hopps Hunter Proposal
+<img src="https://github.com/shaunwo/hopps-hunter/blob/52720284bc54941ad8c55cf0d5794c6dc758d9bc/hopps-hunter_logo.png" width="250" alt="Hopps Hunter Logo" />
+
 by Shaun Worcester
 
 ## Objective
