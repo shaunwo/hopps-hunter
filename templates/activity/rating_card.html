@@ -35,8 +35,7 @@
 			<!-- Toasts and Comments -->
 			{% if toasts[rating.checkin_id] or comments[rating.checkin_id] %}
 			<h4 class="toasts-and-comments">Toasts & Comments</h4>
-			{% set ns = namespace() %} {% if toasts[rating.checkin_id] %} {%
-			set toasted = [] %}
+			{% if toasts[rating.checkin_id] %}
 			<p>
 				{% for toaster in toasts[rating.checkin_id] %}{% if
 				loop.index > 1 %}{% if loop.index ==
@@ -47,8 +46,7 @@
 						title="Follow {{toaster['username']}}"
 						>{{toaster['username']}}</a
 					>
-					{% else %}{% set temp = toasted.append(TRUE)
-					%}{{toaster['username']}}{% endif %}</strong
+					{% else %}{{toaster['username']}}{% endif %}</strong
 				>{% endfor %} toasted this
 			</p>
 			{% endif %}{% if comments[rating.checkin_id] %}{% for comment in
@@ -80,13 +78,21 @@
 			class="btn-sm btn-danger"
 			>Delete</a
 		>
-		{% else %}
+		{% else %} {% if rating.checkin_id not in session['toasts'] %}
 		<a
 			href="/activity/toast/{{rating.checkin_id}}"
 			title="Toast this Checkin"
 			class="btn-sm btn-primary"
 			>Toast</a
 		>
+		{% else %}
+		<a
+			href="/activity/untoast/{{rating.checkin_id}}"
+			title="Untoast this Checkin"
+			class="btn-sm btn-danger"
+			>Untoast</a
+		>
+		{% endif %}
 		<a
 			class="btn-sm btn-success"
 			onclick="toggleShowHide('comments{{rating.checkin_id}}')"

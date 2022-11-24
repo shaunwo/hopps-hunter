@@ -19,6 +19,7 @@ CURR_USER_KEY = "curr_user"
 USER_WISHLIST = "wishlist"
 USER_FOLLOWING = "following"
 USER_FOLLOWERS = "followers"
+USER_TOASTS = "toasts"
 BASE_API_URL = os.environ.get('BASE_API_URL','http://127.0.0.1:5000/api')
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get('DATABASE_URL', 'postgresql:///hopps_hunter').replace("postgres://", "postgresql://", 1)
@@ -70,6 +71,10 @@ def do_login(user):
     # adding user's followers to session
     followers_ids = UserConnection.query.filter(UserConnection.connectee_user_id == session[CURR_USER_KEY], UserConnection.approved_dt != None).with_entities(UserConnection.connector_user_id).order_by(UserConnection.created_dt.desc()).all()
     session[USER_FOLLOWERS] = [id for id, in followers_ids]
+
+    # adding user's toasts to session
+    toasts_ids = CheckinToast.query.filter(CheckinToast.user_id == session[CURR_USER_KEY]).with_entities(CheckinToast.checkin_id).all()
+    session[USER_TOASTS] = [id for id, in toasts_ids]
 
 def do_logout():
     """Logout user"""
@@ -407,10 +412,37 @@ def checkin_toast(checkin_id):
         return redirect(request.referrer)
     
     if toast:
+        session[USER_TOASTS].append(checkin_id)
         flash(f"Thanks for your toast!", "success")
         return redirect(request.referrer)
 
     return render_template('activity/index.html')
+
+# untoast someone else's checkin
+@app.route('/activity/untoast/<int:checkin_id>', methods=['GET'])
+def checkin_untoast(checkin_id):
+    
+    """Untoasting someone else's checkin"""
+    
+    # checking to see if the user has signed in
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/user/login")
+    
+    try:
+        db.session.query(CheckinToast).filter(CheckinToast.checkin_id==checkin_id).delete()
+        db.session.commit()
+
+    except IntegrityError as error:
+        # flash(f"{error}", 'danger')
+        message = Markup("Error capturing the utoast. Please try again.")
+        flash(message, 'danger')
+        return redirect(request.referrer)
+    
+    session[USER_TOASTS].remove(checkin_id)
+    flash(f"You changed your mind? Checkin untoasted, successfully.", "success")
+    return redirect(request.referrer)
+
 
 # leave a comment on someone else's checkin
 @app.route('/activity/comment/<int:checkin_id>', methods=['POST'])
