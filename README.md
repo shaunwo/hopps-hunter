@@ -1,4 +1,4 @@
-<img src="https://github.com/shaunwo/hopps-hunter/blob/52720284bc54941ad8c55cf0d5794c6dc758d9bc/hopps-hunter_logo.png" width="250" alt="Hopps Hunter Logo" />
+<img src="https://github.com/shaunwo/hopps-hunter/blob/955a60e384ab6b48781dd08c4f1a4f9d650575e2/hopps-hunter_logo.png" width="450" alt="Hopps Hunter Logo" />
 
 by Shaun Worcester
 
